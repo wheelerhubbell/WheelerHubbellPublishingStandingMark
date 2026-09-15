@@ -1,0 +1,47 @@
+{
+  "checked_at": "2026-09-15T16:18:46.317Z",
+  "source_commit": "37cf8d3ccf38b9a2f6c789aa851b9a89eb7c3e0a",
+  "payment_executed": false,
+  "paid_plan_enabled": false,
+  "account_plan": "Free",
+  "authority_verified": true,
+  "payment_requirements": {
+    "scheme": "exact",
+    "network": "eip155:8453",
+    "amount": "1000000",
+    "asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "payTo": "0x1050eddd8282623b0c263ed6bdbd42370bbc28d3",
+    "maxTimeoutSeconds": 300,
+    "extra": {
+      "assetTransferMethod": "eip3009",
+      "paymentFlow": "authorization",
+      "name": "USD Coin",
+      "version": "2"
+    }
+  },
+  "price_basis": "Launch configuration: 1 USDC per evaluation; no buyer payment authorized by deployment.",
+  "facilitator": {
+    "url": "https://facilitator.payai.network",
+    "supported": true,
+    "free_tier": true,
+    "settlement_execution_verified": false
+  },
+  "rpc": {
+    "url": "https://base-rpc.publicnode.com",
+    "chain_id": 8453,
+    "finalized_number": "0x30f7f70",
+    "finalized_hash": "0x6a8d00dad752e1a3a0e0e58f21796a658ec3f16cfabf71bf2254c1ac87967501",
+    "independent_base_rpc_agrees": true,
+    "usdc_code_present": true,
+    "logs_readable": true
+  },
+  "database": {
+    "provider": "Netlify managed PostgreSQL",
+    "api_role": "netlifydb_readonly",
+    "migration_verified": false,
+    "production_runtime_connection": "Netlify getConnectionString",
+    "migration_path": "netlify/database/migrations/0001_whp_standing.sql"
+  },
+  "configuration_ready_for_deployment": true,
+  "configuration_verified": false
+}
