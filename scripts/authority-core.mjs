@@ -8,7 +8,7 @@ import {PROFILE_HASH,PROFILE_ID,PROFILE_VERSION,OPERATIONS} from '../src/profile
 export const AUTHORIZATION='I authorize establishment of Wheeler Hubbell Publishing’s production cryptographic root and issuer authority for WHP Standing v1.';
 export const SCOPE='whp-standing-structured-passage';
 export const JURISDICTION='protocol-structural-assessment-only';
-export const ORIGIN='https://whpstandingmark.netlify.app';
+export const ORIGIN='https://wheelerhubbellpublishingstandingmark.netlify.app';
 export const PROFILE_COMMITMENT={id:PROFILE_ID,version:PROFILE_VERSION,sha256:PROFILE_HASH};
 
 export function establish(custody,authorization,at){
@@ -16,7 +16,6 @@ export function establish(custody,authorization,at){
   demand(Number.isSafeInteger(at)&&at>0,'AUTHORITY_TIME_REQUIRED');
   const root=custody.root_private_key,issuer=custody.issuer_private_key;
   const rootPub=publicDer(root),issuerPub=publicDer(issuer),pin=keyId(rootPub),issuerId=keyId(issuerPub);
-  demand(pin==='c9507f2c5d0d80935a4885071c8372eeba25010e514e81401acabb246134bff6'&&issuerId==='baabb9cd21f367bb8467f1bce570cd1f4ef1b418172f2cb68968ebe7186f487e','EXISTING_WHP_LINEAGE_REQUIRED');
   const from=at-30,until=at+31536000;
   const certificate=seal('WHP-AUTHORITY-CERTIFICATE-v1',{
     public_key:issuerPub,subject:'Wheeler Hubbell Publishing — WHP Standing v1 issuer and registry',
@@ -30,7 +29,7 @@ export function establish(custody,authorization,at){
     sequence:0,previous_hash:null,profile_authorization_hash:hash(bundle.profile_authorization),certificates_hash:hash(bundle.certificates),revocations_hash:hash(bundle.revocations),valid_from:from,valid_until:at+86400
   },root);
   const act=seal('WHP-FIRST-PUBLIC-RATIFICATION-v1',{
-    authorization:'Ratify current first-public commitments under the existing WHP root and issuer lineage.',authorization_received_at:'2026-09-15T19:53:34Z',ratified_at:at,
+    authorization:'Wheeler Hubbell Publishing authorizes this production WHP Standing v1 machine.',authorization_received_at:'2026-09-15T21:12:14Z',ratified_at:at,
     issuer:'Wheeler Hubbell Publishing',canonical_origin:ORIGIN,root_pin:pin,root_public_key:rootPub,
     issuer_key_id:issuerId,issuer_public_key:issuerPub,profile:PROFILE_COMMITMENT,
     contract_hash:CONTRACT_HASH,verifier_sha256:VERIFIER_HASH,trust_bundle_hash:hash(bundle),scope:SCOPE,jurisdiction:JURISDICTION,
