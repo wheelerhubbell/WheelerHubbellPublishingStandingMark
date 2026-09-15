@@ -1,0 +1,31 @@
+name: Bounded production repair verification
+on:
+  push:
+    branches: [production-fresh-keys-20260915]
+permissions:
+  contents: read
+jobs:
+  boundaries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node scripts/check-repair-boundaries.mjs
+      - name: Preserve the exact nonsecret source snapshot
+        if: always()
+        run: |
+          mkdir -p artifacts
+          git archive --format=zip HEAD > artifacts/repair-source.zip
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bounded-production-repair
+          path: |
+            artifacts/repair-boundaries.json
+            artifacts/repair-source.zip
+          if-no-files-found: error

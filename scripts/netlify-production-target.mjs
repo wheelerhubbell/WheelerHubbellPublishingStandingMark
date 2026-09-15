@@ -1,33 +1,47 @@
-// Target relationship only. Provider operations reuse the existing Netlify API mechanism.
-import {appendFile} from 'node:fs/promises';
-import {demand} from '../src/canonical.mjs';
+// The current production target only. No fingerprint is a module-level constant.
+import {appendFile,readFile} from 'node:fs/promises';
+import {demand,parseStrict,hashBytes} from '../src/canonical.mjs';
+import {PROFILE_HASH} from '../src/profile.mjs';
+import {CONTRACT_HASH,VERIFIER_HASH} from '../src/protocol.mjs';
 export const ORIGIN='https://wheelerhubbellpublishingstandingmark.netlify.app';
 export const REPOSITORY='wheelerhubbell/WheelerHubbellPublishingStandingMark';
+export const SITE_ID='813ee022-f4d9-4d8e-a974-86158583a39f';
+export const COMMITMENTS=Object.freeze({profile:'4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab',contract:'dd433c055fe0ad0bdb0326479b3339eea018204ccef44cd6ef247520a29c8e75',verifier:'bb8cb78205f1892dcbf00d845cf85e504a0efacf2a0d8a793313fa8c0e99b833'});
+export async function verifySourceCommitments(){
+ const m=parseStrict(await readFile(new URL('../public/verifier-manifest.json',import.meta.url),'utf8'));
+ demand(PROFILE_HASH===COMMITMENTS.profile,'FROZEN_PROFILE_MISMATCH');
+ demand(CONTRACT_HASH===COMMITMENTS.contract&&m.contract_hash===CONTRACT_HASH,'FROZEN_CONTRACT_MISMATCH');
+ demand(VERIFIER_HASH===COMMITMENTS.verifier&&m.sha256===VERIFIER_HASH&&m.path==='/verification/'+VERIFIER_HASH+'.py','FROZEN_VERIFIER_MANIFEST_MISMATCH');
+ demand(hashBytes(await readFile(new URL('../public'+m.path,import.meta.url)))===VERIFIER_HASH,'FROZEN_VERIFIER_BYTES_MISMATCH');
+ return {...COMMITMENTS,verifier_bytes_checked:true,contract_regenerated:false};
+}
 export async function api(path,method='GET',body){
-  demand(process.env.NETLIFY_AUTH_TOKEN,'NETLIFY_AUTH_TOKEN_REQUIRED',503);
-  const r=await fetch('https://api.netlify.com/api/v1'+path,{method,headers:{Authorization:'Bearer '+process.env.NETLIFY_AUTH_TOKEN,'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(60000)});
-  demand(r.ok,'NETLIFY_'+method+'_'+r.status,503);return r.status===204?null:r.json();
+ demand(process.env.NETLIFY_AUTH_TOKEN,'NETLIFY_AUTH_TOKEN_REQUIRED',503);
+ const r=await fetch('https://api.netlify.com/api/v1'+path,{method,headers:{Authorization:'Bearer '+process.env.NETLIFY_AUTH_TOKEN,'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(60000)});
+ demand(r.ok,'NETLIFY_'+method+'_'+r.status,503);return r.status===204?null:r.json();
 }
 export const value=(e,c='production')=>e?.values?.find(v=>v.context===c)?.value??(c==='production'?e?.values?.find(v=>v.context==='all')?.value:undefined);
 export const prefix=s=>'/accounts/'+s.account_id+'/env';
 export async function variables(site){return api(prefix(site)+'?site_id='+site.id);}
+export async function variable(site,key){
+ try{return await api(prefix(site)+'/'+encodeURIComponent(key)+'?site_id='+site.id);}catch(e){if(e.code==='NETLIFY_GET_404')return null;throw e;}
+}
+export function assertTarget(site){demand(site.id===SITE_ID&&site.ssl_url===ORIGIN,'PRODUCTION_WRITE_TARGET_MISMATCH');}
+export async function createVariable(site,key,data,context='production'){
+ assertTarget(site);demand(typeof data==='string'&&Buffer.byteLength(data)<=5000,'ENVIRONMENT_VALUE_SIZE_LIMIT');
+ await api(prefix(site)+'?site_id='+site.id,'POST',[{key,values:[{context,value:data}]}]);
+}
 export async function put(site,key,data,context='production'){
-  demand(site.ssl_url===ORIGIN,'PRODUCTION_WRITE_TARGET_MISMATCH');
-  const vars=await variables(site),prior=vars.find(e=>e.key===key);
-  const isolated=['WHP_AUTHORITY_CUSTODY_V1','WHP_ISSUER_PRIVATE_KEY'].includes(key);
-  if(!isolated&&value(prior,context)===data)return;
-  if(prior?.values?.length===1&&prior.values[0].context===context&&prior.values[0].value===data)return;
-  const body={key,values:[{context,value:data}]};
-  await api(prefix(site)+(prior?'/'+key:'')+'?site_id='+site.id,prior?'PUT':'POST',prior?body:[body]);
+ assertTarget(site);demand(typeof data==='string'&&Buffer.byteLength(data)<=5000,'ENVIRONMENT_VALUE_SIZE_LIMIT');
+ const prior=await variable(site,key);
+ if(prior?.values?.length===1&&prior.values[0].context===context&&prior.values[0].value===data)return;
+ const body={key,values:[{context,value:data}]};
+ await api(prefix(site)+(prior?'/'+encodeURIComponent(key):'')+'?site_id='+site.id,prior?'PUT':'POST',prior?body:[body]);
 }
 export async function target(){
-  const s=await api('/sites/'+new URL(ORIGIN).hostname);
-  demand(s.id&&s.account_id&&s.ssl_url===ORIGIN,'NEW_PRODUCTION_TARGET_REQUIRED');
-  const repo=s.build_settings??s.repo??{};
-  const path=(repo.repo_path??repo.repo_url??'').replace(/^https?:\/\/github.com\//,'').replace(/\.git$/,'');
-  demand(path===REPOSITORY&&repo.repo_branch==='main','NETLIFY_REPOSITORY_CUTOVER_REQUIRED',503);
-  return s;
+ const s=await api('/sites/'+SITE_ID);assertTarget(s);demand(s.account_id,'NETLIFY_ACCOUNT_ID_REQUIRED');
+ const repo=s.build_settings??s.repo??{};
+ const path=(repo.repo_path??repo.repo_url??'').replace(/^https?:\/\/github.com\//,'').replace(/\.git$/,'');
+ demand(path===REPOSITORY&&repo.repo_branch==='main','NETLIFY_REPOSITORY_CUTOVER_REQUIRED',503);return s;
 }
-export async function exportTarget(site){
-  if(process.env.GITHUB_ENV)await appendFile(process.env.GITHUB_ENV,'NETLIFY_SITE_ID='+site.id+'\nWHP_ORIGIN='+ORIGIN+'\n');
-}
+export async function exportTarget(site){if(process.env.GITHUB_ENV)await appendFile(process.env.GITHUB_ENV,'NETLIFY_SITE_ID='+site.id+'\nWHP_ORIGIN='+ORIGIN+'\n');}

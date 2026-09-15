@@ -1,8 +1,60 @@
-name: Repository production source
+name: Production authority administration
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: whp-current-production-authority
+  cancel-in-progress: false
 jobs:
-  no-op:
+  authority:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
     steps:
-      - run: echo 'Production deployment is owned by the connected Netlify project; no duplicate deploy or authority mutation runs from GitHub Actions.'
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Fresh establishment and matching existing configuration
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          node scripts/establish-live-authority.mjs
+          node scripts/configure-production.mjs
+      - name: Renew only the current signed trust epoch
+        if: github.event_name == 'schedule'
+        run: node scripts/refresh-live-status.mjs
+      - name: Publish one coherent authority commit without forcing
+        id: publication
+        run: |
+          git add -- public/authority
+          if git diff --cached --quiet; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            git config user.name 'WHP authority administration'
+            git config user.email 'wheelerhubbell@users.noreply.github.com'
+            git commit -m 'Publish current WHP production authority epoch'
+            git push origin HEAD:main
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Observe the connected deployment and live runtime trust
+        env:
+          EXPECTED_DEPLOY_COMMIT: ${{ steps.publication.outputs.commit }}
+        run: node scripts/observe-authority-deployment.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-authority-proof
+          path: |
+            artifacts/authority-deployment.json
+            evidence/live-authority/fresh-key-establishment.json
+            evidence/production/configuration.json
+          if-no-files-found: ignore

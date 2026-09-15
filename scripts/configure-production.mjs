@@ -1,34 +1,41 @@
-// Existing production configuration machinery, restricted to the new project.
-// Reuse established facilitator/RPC/payment facts; do not repeat their test campaign.
+// Current project, existing database, existing payment semantics. No provisioning or account-plan writes.
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
-import {canonical,parseStrict,demand,hash} from '../src/canonical.mjs';
+import {pathToFileURL} from 'node:url';
+import {canonical,parseStrict,demand,hash,publicDer,keyId} from '../src/canonical.mjs';
 import {verifyAuthority} from './authority-core.mjs';
-import {postgresStore} from '../src/store.mjs';
+import {postgresStore,migration} from '../src/store.mjs';
 import {livePaymentDestination} from '../src/discovery.mjs';
-import {api,target,variables,put,value,ORIGIN,ROOT_PIN,exportTarget} from './netlify-production-target.mjs';
-const report={checked_at:new Date().toISOString(),source_commit:process.env.GITHUB_SHA,origin:ORIGIN,payment_executed:false,paid_plan_enabled:false};
-try{
- const site=await target();await exportTarget(site);
- const account=await api('/accounts/'+site.account_id);demand(account.type_name==='Free','NO_PAID_ACCOUNT_OPERATION_AUTHORIZED');report.account_plan=account.type_name;report.site_id=site.id;
- const vars=await variables(site),pub=parseStrict(await readFile('public/authority/root.json','utf8'),1048576);
- const issuer=value(vars.find(e=>e.key==='WHP_ISSUER_PRIVATE_KEY')),bundle=parseStrict(value(vars.find(e=>e.key==='WHP_TRUST_BUNDLE_JSON')),1048576);
- verifyAuthority(bundle,ROOT_PIN,issuer,Math.floor(Date.now()/1000));demand(pub.root_pin===ROOT_PIN&&value(vars.find(e=>e.key==='WHP_ROOT_PIN'))===ROOT_PIN,'ROOT_PIN_CONFIGURATION_MISMATCH');
- report.authority_verified=true;
- const requirements={scheme:'exact',network:'eip155:8453',amount:'1000000',asset:'0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',payTo:'0x1050eddd8282623b0c263ed6bdbd42370bbc28d3',maxTimeoutSeconds:300,extra:{assetTransferMethod:'eip3009',paymentFlow:'authorization',name:'USD Coin',version:'2'}};
- livePaymentDestination(requirements);report.payment_requirements=requirements;
- const facilitator='https://facilitator.payai.network',rpc='https://base-rpc.publicnode.com';
- report.rail_configuration_reused_from='e1c030f3942973aec947be1d90f9060e33f4d34c';report.facilitator_and_rpc_tests_rerun=false;
- // Same idempotent managed PostgreSQL provisioning and native migration mechanism.
- await api('/sites/'+site.id+'/database','POST',{});
- const db=await api('/sites/'+site.id+'/database?role=netlifydb_owner');demand(typeof db.connection_string==='string','DATABASE_CONNECTION_REQUIRED');
+import {api,target,variable,put,value,ORIGIN,exportTarget,verifySourceCommitments} from './netlify-production-target.mjs';
+import {CEREMONY,readPublic} from './production-authority-v2.mjs';
+export const PAYMENT_REQUIREMENTS={scheme:'exact',network:'eip155:8453',amount:'1000000',asset:'0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',payTo:'0x1050eddd8282623b0c263ed6bdbd42370bbc28d3',maxTimeoutSeconds:300,extra:{assetTransferMethod:'eip3009',paymentFlow:'authorization',name:'USD Coin',version:'2'}};
+const tables=['purchases','registry_events','review_requests'];
+const required={purchases:{id:['text','NO'],buyer_key:['text','NO'],client_reference:['text','NO'],request_hash:['text','NO'],state:['text','NO'],payment_key:['text','YES'],record:['text','NO'],result_bytes:['text','YES'],lease_owner:['text','YES'],lease_until:['bigint','NO']},registry_events:{purchase_id:['text','NO'],sequence:['integer','NO'],event_bytes:['text','NO'],event_hash:['text','NO']},review_requests:{review_id:['text','NO'],purchase_id:['text','NO'],record:['text','NO']}};
+const metadata=async q=>q("SELECT table_name,column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema='public' AND table_name=ANY($1::text[]) ORDER BY table_name,ordinal_position",[tables]);
+function checkColumns(rows,complete){
+ for(const name of tables){const cols=rows.filter(r=>r.table_name===name);if(!cols.length&&!complete)continue;for(const [col,[type,nullable]] of Object.entries(required[name])){const got=cols.find(r=>r.column_name===col);demand(got&&got.data_type===type&&got.is_nullable===nullable,'DATABASE_STRUCTURE_MISMATCH_'+name+'_'+col);}}
+ const lease=rows.find(r=>r.table_name==='purchases'&&r.column_name==='lease_until');if(lease)demand(/^'?0'?(?:::bigint)?$/.test(lease.column_default??''),'DATABASE_LEASE_DEFAULT_MISMATCH');
+}
+export async function inspectExistingDatabase(site){
+ const db=await api('/sites/'+site.id+'/database?role=netlifydb_owner');demand(typeof db.connection_string==='string','EXISTING_DATABASE_CONNECTION_REQUIRED');
  const store=await postgresStore(db.connection_string);try{
-  const role=(await store.driver.query('SELECT current_user AS role'))[0].role;
-  report.database={provider:'Netlify managed PostgreSQL',api_role:role,available_on_new_target:true,migration_verified:false,production_runtime_connection:'Netlify getConnectionString',migration_path:'netlify/database/migrations/0001_whp_standing.sql'};
+  let rows=await metadata(store.driver.query);checkColumns(rows,false);const missing=tables.filter(n=>!rows.some(r=>r.table_name===n));let applied=false;
+  if(missing.length){const bytes=await readFile('netlify/database/migrations/0001_whp_standing.sql','utf8');demand(bytes===migration,'EXISTING_MIGRATION_SOURCE_MISMATCH');await store.driver.transaction(async tx=>{await tx.query("SELECT pg_advisory_xact_lock(hashtext('whp-standing-schema-v1'))");const locked=await metadata(tx.query);checkColumns(locked,false);if(tables.some(n=>!locked.some(r=>r.table_name===n))){await tx.query(bytes);applied=true;}});}
+  rows=await metadata(store.driver.query);checkColumns(rows,true);
+  const constraints=await store.driver.query("SELECT r.relname AS table_name,c.contype,pg_get_constraintdef(c.oid) AS definition FROM pg_constraint c JOIN pg_class r ON r.oid=c.conrelid JOIN pg_namespace n ON n.oid=r.relnamespace WHERE n.nspname='public' AND r.relname=ANY($1::text[])",[tables]);
+  const norm=x=>x.replaceAll('public.','').replace(/\s+/g,' ').trim();
+  for(const [table,defs] of Object.entries({purchases:['PRIMARY KEY (id)','UNIQUE (payment_key)','UNIQUE (buyer_key, client_reference)'],registry_events:['PRIMARY KEY (purchase_id, sequence)','FOREIGN KEY (purchase_id) REFERENCES purchases(id)'],review_requests:['PRIMARY KEY (review_id)','FOREIGN KEY (purchase_id) REFERENCES purchases(id)']}))for(const def of defs)demand(constraints.some(c=>c.table_name===table&&norm(c.definition)===def),'DATABASE_CONSTRAINT_MISMATCH_'+table);
+  return {provider:'Netlify managed PostgreSQL',existing_connection_verified:true,required_tables:tables,column_structure_verified:true,required_constraints_verified:true,existing_migration_applied:applied,customer_rows_read:false,database_created:false,database_replaced:false,runtime_role_connection_not_yet_observed:true};
  }finally{await store.close();}
- const configuration={WHP_USE_NETLIFY_DATABASE:'true',WHP_ORIGIN:ORIGIN,WHP_FACILITATOR_URL:facilitator,WHP_RPC_URL:rpc,WHP_PAYMENT_REQUIREMENTS_JSON:canonical(requirements),WHP_RESOLUTION_URL:ORIGIN+'/.well-known/standing-capability.json',WHP_CAPABILITY_CATALOG_URL:ORIGIN+'/discovery/provider-index.json'};
- for(const [k,v] of Object.entries(configuration))await put(site,k,v);
- const back=await variables(site);for(const [k,v] of Object.entries(configuration))demand(value(back.find(e=>e.key===k))===v,'CONFIG_READBACK_FAILED_'+k);
- demand(hash(parseStrict(value(back.find(e=>e.key==='WHP_PAYMENT_REQUIREMENTS_JSON'))))===hash(requirements),'PAYMENT_CONFIG_MISMATCH');
- report.configuration_ready_for_deployment=true;report.configuration_accepted_on_new_target=true;report.production_boundary_observed=false;
-}catch(e){report.failure=e.code??e.name;process.exitCode=1;}
-await mkdir('evidence/production',{recursive:true});await writeFile('evidence/production/configuration.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
+}
+export async function configureProduction(){
+ const commitments=await verifySourceCommitments(),site=await target();await exportTarget(site);const pub=await readPublic();demand(pub.ceremony_id===CEREMONY,'FRESH_PUBLISHED_AUTHORITY_REQUIRED');
+ const issuer=value(await variable(site,'WHP_ISSUER_PRIVATE_KEY')),bundle=parseStrict(value(await variable(site,'WHP_TRUST_BUNDLE_JSON')),1048576);
+ verifyAuthority(bundle,pub.root_pin,issuer,Math.floor(Date.now()/1000));demand(value(await variable(site,'WHP_ROOT_PIN'))===pub.root_pin&&keyId(publicDer(issuer))===pub.issuer_key_id&&hash(bundle)===hash(pub.trust_bundle),'AUTHORITY_CONFIGURATION_MISMATCH');
+ livePaymentDestination(PAYMENT_REQUIREMENTS);
+ const database=await inspectExistingDatabase(site);
+ const configuration={WHP_USE_NETLIFY_DATABASE:'true',WHP_ORIGIN:ORIGIN,WHP_FACILITATOR_URL:'https://facilitator.payai.network',WHP_RPC_URL:'https://base-rpc.publicnode.com',WHP_PAYMENT_REQUIREMENTS_JSON:canonical(PAYMENT_REQUIREMENTS),WHP_RESOLUTION_URL:ORIGIN+'/.well-known/standing-capability.json',WHP_CAPABILITY_CATALOG_URL:ORIGIN+'/discovery/provider-index.json'};
+ for(const [k,v] of Object.entries(configuration))await put(site,k,v);for(const [k,v] of Object.entries(configuration))demand(value(await variable(site,k))===v,'CONFIG_READBACK_FAILED_'+k);
+ const report={checked_at:new Date().toISOString(),source_commit:process.env.GITHUB_SHA??null,origin:ORIGIN,site_id:site.id,commitments,root_pin:pub.root_pin,issuer_key_id:pub.issuer_key_id,authority_configuration_agrees:true,database,payment_requirements:PAYMENT_REQUIREMENTS,payment_semantics_changed:false,configuration_ready_for_deployment:true,deployed_runtime_observed:false,account_plan_changed:false,payment_executed:false};
+ await mkdir('evidence/production',{recursive:true});await writeFile('evidence/production/configuration.json',JSON.stringify(report,null,2)+'\n');return report;
+}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){try{console.log(JSON.stringify(await configureProduction()));}catch(e){console.error('PRODUCTION_CONFIGURATION_STOPPED',e.code??'SAFE_INTERNAL_FAILURE');process.exitCode=1;}}
