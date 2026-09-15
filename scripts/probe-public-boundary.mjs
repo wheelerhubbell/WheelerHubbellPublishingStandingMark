@@ -7,13 +7,11 @@ import {validateSubmission} from '../src/validation.mjs';
 import {validateTrust,authorize} from '../src/authority.mjs';
 import {CONTRACT_HASH,VERIFIER_HASH} from '../src/protocol.mjs';
 import {checkPublicService} from './check-public-service.mjs';
-const origin='https://whpstandingmark.netlify.app',pin=process.env.WHP_ROOT_PIN;
+const origin='https://wheelerhubbellpublishingstandingmark.netlify.app',pin=process.env.WHP_ROOT_PIN;
 const trace=[],report={checked_at:new Date().toISOString(),origin,payment_authorizations_created:0,settlement_calls:0,SOLD:false,ISSUED:false,'PROPAGATION-PROVEN':false};
 async function req(url,options){const r=await fetch(url,{...options,redirect:'error',signal:AbortSignal.timeout(30000)});const body=await r.text();trace.push({url,method:options?.method??'GET',status:r.status,sha256:hashBytes(body)});return {r,body,json:()=>JSON.parse(body)};}
 try{
  Object.assign(report,await checkPublicService(origin,pin));
- // Input is an external action and a vendor-neutral requirement. The provider
- // catalog seed is explicit; this does not claim unsolicited directory discovery.
  const need={object:{id:'public-boundary-diagnostic',action:'INFORM'},requirement:'Machine-verifiable standing under explicit authority and bounds.',provider_catalog:origin+'/.well-known/api-catalog'};
  const catalog=(await req(need.provider_catalog)).json();
  const entry=catalog.linkset.find(e=>e['service-meta']&&e['service-desc']);demand(entry,'PROVIDER_METADATA_MISSING');
@@ -26,10 +24,8 @@ try{
  const providers=(await req(origin+'/discovery/provider-index.json')).json();
  demand(resolved.payload.provider_discovery.url===origin+'/discovery/provider-index.json'&&providers.providers.some(p=>p.capability_class==='urn:capability:machine-verifiable-standing:1'&&p.resolution_url===origin+'/.well-known/standing-capability.json'),'PRODUCTION_CAPABILITY_DISCOVERY_MISSING');
  report.signed_production_resolution_verified=true;report.vendor_neutral_capability_surface_available=true;
-
  const profile=(await req(contract.profile.url)).json();demand(hash(profile.profile)===contract.profile.sha256,'PROFILE_HASH_MISMATCH');
  await req(contract.purchase.input_schema);
- // Ephemeral HTTP diagnostic key, not an EVM wallet or an outside buyer.
  const key=generateKeyPairSync('ed25519').privateKey,at=Math.floor(Date.now()/1000);
  const cert=discovery.issuer_certificate.payload;
  const bounds={scope:cert.scopes[0],jurisdiction:cert.jurisdictions[0],valid_from:at-1,valid_until:at+300};
