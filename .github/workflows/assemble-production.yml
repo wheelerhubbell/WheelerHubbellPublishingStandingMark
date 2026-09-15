@@ -1,0 +1,75 @@
+name: Assemble pinned WHP Standing production sources
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/assemble-production.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: whp-clean-production-assembly
+  cancel-in-progress: false
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: wheelerhubbell/WHPStanding
+          ref: fdf72e5963f76b89b387f88cdfb32228c6c83114
+          path: _source/first-public
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: wheelerhubbell/WHPStanding
+          ref: e1c030f3942973aec947be1d90f9060e33f4d34c
+          path: _source/production
+          persist-credentials: false
+      - name: Copy established application and existing production machinery; no tests
+        shell: python
+        run: |
+          import pathlib, shutil, hashlib, json, zipfile
+          here = pathlib.Path('.')
+          first = here / '_source/first-public'
+          old = here / '_source/production'
+          archive = old / 'WHP-Standing-v1-candidate-1.zip'
+          expected = 'f5c22e782453a3fda208d472cfb9a6928866fe40ac7f5cbd1198f1ec909341fe'
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == expected, 'SOURCE_ARCHIVE_IDENTITY_MISMATCH'
+          for item in first.iterdir():
+              if item.name in {'.git', '.github', 'build-input', 'WHP-Standing-v1-candidate-1.zip', 'WHP-Standing-v1-candidate-1.zip.sha256'}:
+                  continue
+              if item.is_dir(): shutil.copytree(item, here/item.name, dirs_exist_ok=True)
+              else: shutil.copy2(item, here/item.name)
+          selected = ['scripts/authority-core.mjs', 'scripts/establish-live-authority.mjs', 'scripts/configure-production.mjs', 'scripts/refresh-live-status.mjs', 'scripts/check-public-service.mjs', 'scripts/probe-public-boundary.mjs', 'netlify/database', 'public/authority', 'evidence/live-authority', 'evidence/production', 'POST-ZIP-CONTINUITY.md']
+          admitted = []
+          for name in selected:
+              src = old/name
+              if not src.exists(): continue
+              dst = here/name
+              dst.parent.mkdir(parents=True,exist_ok=True)
+              if src.is_dir(): shutil.copytree(src,dst,dirs_exist_ok=True)
+              else: shutil.copy2(src,dst)
+              admitted.append(name)
+          out = pathlib.Path('/tmp/whp-source-transport'); out.mkdir()
+          for name, root in [('first-public',first),('historical-production',old)]:
+              with zipfile.ZipFile(out/(name+'.zip'),'w',zipfile.ZIP_DEFLATED) as z:
+                  for p in root.rglob('*'):
+                      if p.is_file() and '.git' not in p.relative_to(root).parts:
+                          z.write(p,p.relative_to(root))
+          (here/'evidence/production-assembly').mkdir(parents=True,exist_ok=True)
+          (here/'evidence/production-assembly/sources.json').write_text(json.dumps({'first_public_commit':'fdf72e5963f76b89b387f88cdfb32228c6c83114','historical_production_commit':'e1c030f3942973aec947be1d90f9060e33f4d34c','amended_archive_sha256':expected,'production_machinery_admitted':admitted,'target_origin':'https://whpstandingmark.netlify.app','assembly_state':'SOURCE_JOIN_REQUIRES_TARGET_AND_AUTHORITY_ADAPTATION','tests_executed':False,'source_repository_modified':False,'production_configuration_installed':False,'deployed':False},indent=2)+'\n')
+          shutil.rmtree('_source')
+      - name: Commit assembled files only to this new repository
+        run: |
+          git config user.name 'WHP Production Assembly'
+          git config user.email 'actions@users.noreply.github.com'
+          git add .
+          git diff --cached --quiet || git commit -m 'Join verified first-public machine and preserved production machinery; no tests rerun'
+          git push origin HEAD:main
+      - name: Make exact source bytes available for assembly inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: pinned-production-sources
+          path: /tmp/whp-source-transport/
+          retention-days: 7
