@@ -2,11 +2,9 @@
 import {readFile,writeFile} from 'node:fs/promises';
 import {canonical,parseStrict,seal,hash,demand,keyId,publicDer} from '../src/canonical.mjs';
 import {validateTrust} from '../src/authority.mjs';
-const SITE='914e2d6d-ec82-4b03-aa58-785fcf3b453b',ACCOUNT='6aa6fb2da06f6afa962eee67',PREFIX='/accounts/'+ACCOUNT+'/env';
-async function api(path,method='GET',body){const r=await fetch('https://api.netlify.com/api/v1'+path,{method,headers:{Authorization:'Bearer '+process.env.NETLIFY_AUTH_TOKEN,'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(30000)});demand(r.ok,'STATUS_CUSTODY_HTTP_'+r.status);return r.status===204?null:r.json();}
-const value=(e,c)=>e?.values?.find(v=>v.context===c)?.value;
+import {api,target,variables,put,value} from './netlify-production-target.mjs';
 try{
- const vars=await api(PREFIX+'?site_id='+SITE),record=vars.find(e=>e.key==='WHP_AUTHORITY_CUSTODY_V1');
+ const site=await target(),vars=await variables(site),record=vars.find(e=>e.key==='WHP_AUTHORITY_CUSTODY_V1');
  demand(record?.values.every(v=>v.context==='dev'),'ROOT_CONTEXT_INVALID');
  const saved=parseStrict(value(record,'dev')),a=saved.authority,c=saved.custody,now=Math.floor(Date.now()/1000);
  const pub=parseStrict(await readFile('public/authority/root.json','utf8'));
@@ -20,11 +18,11 @@ try{
  b.status_snapshot=seal('WHP-TRUST-STATUS-v1',{...prior.payload,sequence:prior.payload.sequence+1,previous_hash:hash(prior),valid_from:now-30,valid_until:until},c.root_private_key);
  validateTrust(b,a.root_pin,now);
  // Persist first; an interrupted retry resumes the same epoch and identity.
- await api(PREFIX+'/WHP_AUTHORITY_CUSTODY_V1?site_id='+SITE,'PUT',{key:'WHP_AUTHORITY_CUSTODY_V1',values:[{context:'dev',value:canonical(saved)}]});
+ await put(site,'WHP_AUTHORITY_CUSTODY_V1',canonical(saved),'dev');
  }
  validateTrust(b,a.root_pin,now);
- await api(PREFIX+'/WHP_TRUST_BUNDLE_JSON?site_id='+SITE,'PUT',{key:'WHP_TRUST_BUNDLE_JSON',values:[{context:'production',value:canonical(b)}]});
- const back=await api(PREFIX+'?site_id='+SITE);
+ await put(site,'WHP_TRUST_BUNDLE_JSON',canonical(b));
+ const back=await variables(site);
  demand(hash(parseStrict(value(back.find(e=>e.key==='WHP_TRUST_BUNDLE_JSON'),'production')))===hash(b),'STATUS_READBACK_MISMATCH');
  pub.trust_bundle=b;
  await writeFile('public/authority/root.json',canonical(pub)+'\n');

@@ -1,6 +1,6 @@
 // Production authority uses the same closed contracts and primitives as every Mark.
 // No independent signing implementation and no file/network/key-custody side effects.
-import {generateKeyPairSync} from 'node:crypto';
+import {CONTRACT_HASH,VERIFIER_HASH} from '../src/protocol.mjs';
 import {seal,hash,keyId,publicDer,demand,clone,openSeal} from '../src/canonical.mjs';
 import {validateTrust,issuerAuthority,authorize} from '../src/authority.mjs';
 import {PROFILE_HASH,PROFILE_ID,PROFILE_VERSION,OPERATIONS} from '../src/profile.mjs';
@@ -8,37 +8,32 @@ import {PROFILE_HASH,PROFILE_ID,PROFILE_VERSION,OPERATIONS} from '../src/profile
 export const AUTHORIZATION='I authorize establishment of Wheeler Hubbell Publishing’s production cryptographic root and issuer authority for WHP Standing v1.';
 export const SCOPE='whp-standing-structured-passage';
 export const JURISDICTION='protocol-structural-assessment-only';
-export const ORIGIN='https://whpstanding.netlify.app';
+export const ORIGIN='https://whpstandingmark.netlify.app';
 export const PROFILE_COMMITMENT={id:PROFILE_ID,version:PROFILE_VERSION,sha256:PROFILE_HASH};
-
-export function newCustody(at){
-  const pem=k=>k.export({type:'pkcs8',format:'pem'}).toString();
-  return {version:'WHP-AUTHORITY-CUSTODY-v1',created_at:at,root_private_key:pem(generateKeyPairSync('ed25519').privateKey),issuer_private_key:pem(generateKeyPairSync('ed25519').privateKey)};
-}
 
 export function establish(custody,authorization,at){
   demand(authorization===AUTHORIZATION,'EXPLICIT_AUTHORIZATION_REQUIRED');
   demand(Number.isSafeInteger(at)&&at>0,'AUTHORITY_TIME_REQUIRED');
   const root=custody.root_private_key,issuer=custody.issuer_private_key;
   const rootPub=publicDer(root),issuerPub=publicDer(issuer),pin=keyId(rootPub),issuerId=keyId(issuerPub);
-  demand(pin!==issuerId,'SEPARATE_ROOT_AND_ISSUER_REQUIRED');
+  demand(pin==='c9507f2c5d0d80935a4885071c8372eeba25010e514e81401acabb246134bff6'&&issuerId==='baabb9cd21f367bb8467f1bce570cd1f4ef1b418172f2cb68968ebe7186f487e','EXISTING_WHP_LINEAGE_REQUIRED');
   const from=at-30,until=at+31536000;
   const certificate=seal('WHP-AUTHORITY-CERTIFICATE-v1',{
     public_key:issuerPub,subject:'Wheeler Hubbell Publishing — WHP Standing v1 issuer and registry',
-    roles:['ISSUER','REGISTRY'],scopes:[SCOPE],jurisdictions:[JURISDICTION],operations:OPERATIONS,
+    roles:['ISSUER','REGISTRY','DISCOVERY'],scopes:[SCOPE],jurisdictions:[JURISDICTION],operations:OPERATIONS,
     profile_hash:PROFILE_HASH,valid_from:from,valid_until:until
   },root);
   const bundle={root_public_key:rootPub,profile_authorization:seal('WHP-PROFILE-AUTHORIZATION-v1',{
-    profile_hash:PROFILE_HASH,ratified:true,issuer:'Wheeler Hubbell Publishing',environment:'LIVE',valid_from:from,valid_until:until
+    profile_hash:PROFILE_HASH,contract_hash:CONTRACT_HASH,verifier_sha256:VERIFIER_HASH,ratified:true,issuer:'Wheeler Hubbell Publishing',environment:'LIVE',valid_from:from,valid_until:until
   },root),certificates:[certificate],revocations:[]};
   bundle.status_snapshot=seal('WHP-TRUST-STATUS-v1',{
     sequence:0,previous_hash:null,profile_authorization_hash:hash(bundle.profile_authorization),certificates_hash:hash(bundle.certificates),revocations_hash:hash(bundle.revocations),valid_from:from,valid_until:at+86400
   },root);
-  const act=seal('WHP-AUTHORITY-ESTABLISHMENT-v1',{
-    authorization,authorization_received_at:'2026-09-15T13:18:38Z',established_at:at,
+  const act=seal('WHP-FIRST-PUBLIC-RATIFICATION-v1',{
+    authorization:'Ratify current first-public commitments under the existing WHP root and issuer lineage.',authorization_received_at:'2026-09-15T19:53:34Z',ratified_at:at,
     issuer:'Wheeler Hubbell Publishing',canonical_origin:ORIGIN,root_pin:pin,root_public_key:rootPub,
     issuer_key_id:issuerId,issuer_public_key:issuerPub,profile:PROFILE_COMMITMENT,
-    trust_bundle_hash:hash(bundle),scope:SCOPE,jurisdiction:JURISDICTION,
+    contract_hash:CONTRACT_HASH,verifier_sha256:VERIFIER_HASH,trust_bundle_hash:hash(bundle),scope:SCOPE,jurisdiction:JURISDICTION,
     limitation:'Protocol-scoped structural assessment. No external legal or domain authority is conferred. No source or transition authority is manufactured. No payment or Mark issuance occurs in this ceremony.'
   },root);
   verifyAuthority(bundle,pin,issuer,at);
@@ -49,11 +44,11 @@ export function verifyAuthority(bundle,pin,issuer,at){
   const trust=validateTrust(bundle,pin,at),kid=keyId(publicDer(issuer));
   demand(trust.profile.environment==='LIVE'&&trust.profile.issuer==='Wheeler Hubbell Publishing','PRODUCTION_AUTHORITY_IDENTITY_REQUIRED');
   const cert=issuerAuthority(kid,SCOPE,JURISDICTION,trust);
-  demand(cert.roles.includes('REGISTRY'),'REGISTRY_ROLE_REQUIRED');
+  demand(cert.roles.includes('REGISTRY')&&cert.roles.includes('DISCOVERY'),'REGISTRY_AND_DISCOVERY_ROLES_REQUIRED');
   const challenge=seal('WHP-REGISTRY-CUSTODY-PROOF-v1',{root_pin:pin,at},issuer);
   authorize(challenge,'WHP-REGISTRY-CUSTODY-PROOF-v1','REGISTRY',{scope:SCOPE,jurisdiction:JURISDICTION,operations:['INFORM']},trust);
   demand(openSeal(challenge,'WHP-REGISTRY-CUSTODY-PROOF-v1',cert.public_key).root_pin===pin,'ISSUER_CUSTODY_PROOF_FAILED');
-  return {root_pin_consistent:true,issuer_certificate_verified:true,issuer_private_key_matches_certificate:true,issuer_and_registry_roles_verified:true,scope:SCOPE,jurisdiction:JURISDICTION,profile:PROFILE_COMMITMENT,trust_status_verified:true,challenge};
+  return {root_pin_consistent:true,issuer_certificate_verified:true,issuer_private_key_matches_certificate:true,issuer_registry_and_discovery_roles_verified:true,scope:SCOPE,jurisdiction:JURISDICTION,profile:PROFILE_COMMITMENT,trust_status_verified:true,challenge};
 }
 
 export function authorityNegativeProof(bundle,pin,issuer,at){

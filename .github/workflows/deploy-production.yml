@@ -1,0 +1,84 @@
+name: Deploy complete WHP Standing to whpstandingmark
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/deploy-production.yml
+      - .production/execute.json
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: whpstandingmark-production-deployment
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Resolve actual new-target access and repository connection
+        id: target
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs/promises';
+          import {target,exportTarget} from './scripts/netlify-production-target.mjs';
+          const report={checked_at:new Date().toISOString(),repository:process.env.GITHUB_REPOSITORY,commit:process.env.GITHUB_SHA,run_id:process.env.GITHUB_RUN_ID,origin:'https://whpstandingmark.netlify.app',tests_executed:false,source_repository_modified:false,deployed:false,payment_executed:false,live_mark_issued:false};
+          let execute=false;
+          if(!process.env.NETLIFY_AUTH_TOKEN)report.state='AWAITING_NETLIFY_AUTH_TOKEN_IN_NEW_REPOSITORY';
+          else {try{const site=await target();await exportTarget(site);report.site_id=site.id;report.state='NEW_TARGET_AND_REPOSITORY_CONNECTION_VERIFIED';execute=true;}catch(e){report.state=e.code==='NETLIFY_REPOSITORY_CUTOVER_REQUIRED'?'AWAITING_NETLIFY_REPOSITORY_CUTOVER':'NEW_NETLIFY_ACCESS_UNRESOLVED';report.code=e.code??'SAFE_ACCESS_FAILURE';}}
+          await fs.mkdir('evidence/production-assembly',{recursive:true});
+          await fs.writeFile('evidence/production-assembly/execution.json',JSON.stringify(report,null,2)+'\n');
+          await fs.appendFile(process.env.GITHUB_OUTPUT,'execute='+execute+'\n');
+          console.log(JSON.stringify(report));
+          JS
+      - name: Install locked existing runtime dependencies
+        if: steps.target.outputs.execute == 'true'
+        run: npm ci --include=optional --ignore-scripts
+      - name: Ratify current first-public commitments under existing WHP root and issuer
+        if: steps.target.outputs.execute == 'true'
+        run: node scripts/establish-live-authority.mjs
+      - name: Install existing production configuration and managed database on new target
+        if: steps.target.outputs.execute == 'true'
+        run: |
+          node scripts/configure-production.mjs
+          node scripts/refresh-live-status.mjs
+      - name: Install existing Netlify deployment tooling
+        if: steps.target.outputs.execute == 'true'
+        run: npm install --prefix .runtime/deploy-tools netlify-cli
+      - name: Package and deploy this complete assembly to whpstandingmark
+        if: steps.target.outputs.execute == 'true'
+        run: |
+          mkdir -p evidence/production
+          .runtime/deploy-tools/node_modules/.bin/netlify deploy --prod --build --dir public --functions netlify/functions --json > evidence/production/deploy.json
+      - name: Observe deployed authority, discovery and unpaid payment boundary only
+        if: steps.target.outputs.execute == 'true'
+        run: node scripts/probe-public-boundary.mjs
+      - name: Record deployment completion separately from sale or issuance
+        if: success() && steps.target.outputs.execute == 'true'
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs/promises';
+          const path='evidence/production-assembly/execution.json';
+          const report=JSON.parse(await fs.readFile(path,'utf8'));
+          const observed=JSON.parse(await fs.readFile('evidence/public-service/public-boundary.json','utf8'));
+          if(observed.state!=='VERIFIED'||observed.public_payment_status!==402||!observed.durable_quote_retrieval_verified||!observed.signed_production_resolution_verified)throw Error('DEPLOYMENT_COMPLETION_NOT_ESTABLISHED');
+          Object.assign(report,{checked_at:new Date().toISOString(),state:'COMPLETE_DEPLOYED',deployed:true,current_first_public_ratification_materialized:true,production_configuration_installed:true,persistence_operational:true,public_authority_discovery_unpaid_boundary_verified:true,payment_executed:false,live_mark_issued:false,live_propagation_observed:false});
+          await fs.writeFile(path,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
+          JS
+      - name: Preserve actual public evidence without triggering another Netlify build
+        if: always()
+        run: |
+          mkdir -p evidence/production evidence/public-service evidence/production-assembly
+          if grep -REq -- '-----BEGIN [A-Z ]*PRIVATE KEY-----|postgresql://[^[:space:]]+:[^[:space:]]+@' evidence/production evidence/public-service evidence/live-authority public/authority; then
+            echo 'PRIVATE_MATERIAL_NOT_PUBLISHABLE'; exit 1
+          fi
+          git config user.name 'WHP Standing Production'
+          git config user.email 'actions@users.noreply.github.com'
+          git add evidence/production evidence/public-service evidence/production-assembly evidence/live-authority public/authority
+          git diff --cached --quiet || git commit -m 'Record actual whpstandingmark production state [skip ci] [skip netlify]'
+          git push origin HEAD:main

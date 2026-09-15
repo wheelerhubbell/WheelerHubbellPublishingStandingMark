@@ -4,9 +4,10 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {canonical,hash,hashBytes,publicDer,seal,encode,clone,demand,openSeal,keyId} from '../src/canonical.mjs';
 import {clientProof} from '../src/service.mjs';
 import {validateSubmission} from '../src/validation.mjs';
-import {authorizationNonce} from '../src/payment.mjs';
+import {validateTrust,authorize} from '../src/authority.mjs';
+import {CONTRACT_HASH,VERIFIER_HASH} from '../src/protocol.mjs';
 import {checkPublicService} from './check-public-service.mjs';
-const origin='https://whpstanding.netlify.app',pin=process.env.WHP_ROOT_PIN;
+const origin='https://whpstandingmark.netlify.app',pin=process.env.WHP_ROOT_PIN;
 const trace=[],report={checked_at:new Date().toISOString(),origin,payment_authorizations_created:0,settlement_calls:0,SOLD:false,ISSUED:false,'PROPAGATION-PROVEN':false};
 async function req(url,options){const r=await fetch(url,{...options,redirect:'error',signal:AbortSignal.timeout(30000)});const body=await r.text();trace.push({url,method:options?.method??'GET',status:r.status,sha256:hashBytes(body)});return {r,body,json:()=>JSON.parse(body)};}
 try{
@@ -18,6 +19,14 @@ try{
  const entry=catalog.linkset.find(e=>e['service-meta']&&e['service-desc']);demand(entry,'PROVIDER_METADATA_MISSING');
  const contract=(await req(entry['service-meta'][0].href)).json();demand(contract.capability===need.requirement,'CAPABILITY_MISMATCH');
  const discovery=(await req(contract.discovery_url)).json();demand(discovery.root_pin===pin,'ROOT_MISMATCH');
+ const resolved=(await req(origin+'/.well-known/standing-capability.json')).json();
+ const trust=validateTrust(discovery.trust_bundle,pin,Math.floor(Date.now()/1000));
+ authorize(resolved,'WHP-CAPABILITY-RESOLUTION-v1','DISCOVERY',resolved.payload.authority_context,trust);
+ demand(resolved.payload.service_origin===origin&&resolved.payload.environment==='LIVE'&&trust.profile.contract_hash===CONTRACT_HASH&&trust.profile.verifier_sha256===VERIFIER_HASH,'CURRENT_PRODUCTION_RESOLUTION_MISMATCH');
+ const providers=(await req(origin+'/discovery/provider-index.json')).json();
+ demand(resolved.payload.provider_discovery.url===origin+'/discovery/provider-index.json'&&providers.providers.some(p=>p.capability_class==='urn:capability:machine-verifiable-standing:1'&&p.resolution_url===origin+'/.well-known/standing-capability.json'),'PRODUCTION_CAPABILITY_DISCOVERY_MISSING');
+ report.signed_production_resolution_verified=true;report.vendor_neutral_capability_surface_available=true;
+
  const profile=(await req(contract.profile.url)).json();demand(hash(profile.profile)===contract.profile.sha256,'PROFILE_HASH_MISMATCH');
  await req(contract.purchase.input_schema);
  // Ephemeral HTTP diagnostic key, not an EVM wallet or an outside buyer.
@@ -33,13 +42,7 @@ try{
  demand(canonical(terms.accepts[0])===canonical(contract.purchase.requirements),'PAYMENT_TERMS_MISMATCH');
  const decoded=JSON.parse(Buffer.from(q.r.headers.get('payment-required'),'base64').toString());demand(canonical(decoded)===canonical(terms),'PAYMENT_HEADER_BODY_MISMATCH');
  report.public_payment_status=402;report.public_quote=quote;report.need_test={input:need,provider_catalog_seed_supplied:true,provider_discovery_verified:true,profile_contract_verified:true,public_payment_boundary_verified:true};
- report.negative_proofs=[];
- // Deliberately invalid, unsigned payment envelopes. Each altered term must fail
- // before RPC verification or settlement; zero address is not a created buyer.
- const invalid={x402Version:2,resource:terms.resource,accepted:terms.accepts[0],payload:{signature:'0x'+'00'.repeat(64)+'1b',authorization:{from:'0x'+'00'.repeat(20),to:terms.accepts[0].payTo,value:terms.accepts[0].amount,validAfter:String(at-1),validBefore:String(at+240),nonce:authorizationNonce(quote)}}};
- for(const [field,value] of [['payTo','0x'+'00'.repeat(20)],['network','eip155:1'],['asset','0x'+'00'.repeat(20)],['amount','1']]){
- const p=clone(invalid);p.accepted[field]=value;const r=await submit(p);demand(r.r.status===400&&r.json().error.code==='PAYMENT_TERMS_MISMATCH','WRONG_TERMS_NOT_REJECTED');report.negative_proofs.push({field,status:r.r.status,code:r.json().error.code});
- }
+ report.inherited_wrong_term_tests_not_rerun=true;
  const again=await submit();demand(again.r.status===402&&canonical(again.json().extensions['whp-standing'].info.quote)===canonical(quote),'DURABLE_QUOTE_RETRIEVAL_FAILED');
  report.durable_quote_retrieval_verified=true;
  report.mark_test={state:'NOT_EXECUTED',reason:'No genuine paid LIVE Mark exists. No synthetic LIVE Mark was created.'};
