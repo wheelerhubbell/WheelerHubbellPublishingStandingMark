@@ -1,9 +1,16 @@
 [build]
   publish = "public"
   functions = "netlify/functions"
-[build.environment]
-  NODE_VERSION = "22.16.0"
+
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["pg"]
-  included_files = ["profiles/**", "schemas/**", "public/openapi.json", "public/contract.json", "public/examples/**", "public/discovery/**", "public/verifier-manifest.json", "public/verification/**"]
+  external_node_modules = ["pg", "@netlify/database"]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/standing/:splat"
+  status = 200
+  force = true
+
+[build.environment]
+  WHP_ORIGIN = "https://wheelerhubbellpublishingstandingmark.netlify.app"
