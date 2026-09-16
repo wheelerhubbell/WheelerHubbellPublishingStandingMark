@@ -1,0 +1,66 @@
+name: x402scan OpenAPI compatibility
+
+on:
+  push:
+    branches:
+      - x402-registry-propagation-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.head_commit.message == 'compat: inline frozen submission schema for x402 crawlers'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: x402-registry-propagation-20260916
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inline exact schema only in current service OpenAPI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/public-machine.mjs')
+          s=p.read_text()
+          old="import resolutionSchema from '../schemas/discovery-resolution.schema.json' with {type:'json'};"
+          new=old+"\nimport submissionSchema from '../schemas/submission.schema.json' with {type:'json'};"
+          if old not in s or "import submissionSchema from '../schemas/submission.schema.json'" in s:
+              raise SystemExit('unexpected import state')
+          s=s.replace(old,new,1)
+          old2="  api.servers=[{url:service.origin}];"
+          new2=old2+"\n  // Discovery compatibility: inline the exact frozen request schema so crawlers need not dereference an external $ref.\n  api.paths['/v1/evaluations'].post.requestBody.content['application/json'].schema=structuredClone(submissionSchema);"
+          if old2 not in s:
+              raise SystemExit('publicOpenapi insertion point missing')
+          s=s.replace(old2,new2,1)
+          p.write_text(s)
+          PY
+      - name: Verify schema identity and acquisition boundary
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import submissionSchema from './schemas/submission.schema.json' with {type:'json'};
+          import {setup} from './test/fixtures.mjs';
+          import {canonical,hash} from './src/canonical.mjs';
+          import {publicOpenapi,publicMachineRoute} from './src/public-machine.mjs';
+          const a=await setup();
+          try {
+            const api=publicOpenapi(a.service);
+            const inline=api.paths['/v1/evaluations'].post.requestBody.content['application/json'].schema;
+            assert.equal(canonical(inline),canonical(submissionSchema));
+            assert.equal(inline.$id,submissionSchema.$id);
+            const r=await publicMachineRoute(a.service,new Request('https://standing.test.invalid/v1/evaluations',{method:'POST',headers:{'content-type':'application/json'},body:canonical(a.f.submission)}));
+            assert.equal(r.status,402);
+            console.log(JSON.stringify({ok:true,inline_schema_hash:hash(inline),canonical_schema_hash:hash(submissionSchema),same:true,unsigned_evaluation_status:r.status}));
+          } finally { await a.store.close(); }
+          NODE
+      - name: Commit compatibility source change
+        run: |
+          git config user.name 'wheelerhubbell'
+          git config user.email 'wheelerhubbell@gmail.com'
+          git add src/public-machine.mjs
+          git commit -m 'fix: inline canonical evaluation schema in live OpenAPI'
+          git push origin HEAD:x402-registry-propagation-20260916
