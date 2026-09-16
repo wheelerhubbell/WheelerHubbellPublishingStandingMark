@@ -1,0 +1,43 @@
+{
+  "type": "WHP_STANDING_LIVE_DIRECT_X402_PROOF",
+  "observed_at": "2026-09-16T09:57:04.452Z",
+  "repository": "wheelerhubbell/WheelerHubbellPublishingStandingMark",
+  "proof_branch": "direct-x402-acquisition-20260916",
+  "proof_workflow_run_id": 35082267201,
+  "proof_workflow_job_id": 104748802435,
+  "proof_workflow_conclusion": "success",
+  "production_origin": "https://wheelerhubbellpublishingstandingmark.netlify.app",
+  "netlify_site_id": "813ee022-f4d9-4d8e-a974-86158583a39f",
+  "netlify_production_deploy_id": "6aaa66003416ab6db93b8058",
+  "netlify_production_deploy_state": "ready",
+  "netlify_production_published_at": "2026-09-16T09:48:58.443Z",
+  "observations": {
+    "health_http": 200,
+    "contract_http": 200,
+    "evaluation_http": 402,
+    "payment_required_header_present": true,
+    "whp_buyer_proof_sent": false,
+    "whp_buyer_proof_required_by_live_contract": false,
+    "mcp_client_proof_required": false,
+    "x402_version": 2,
+    "network": "eip155:8453",
+    "asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "pay_to": "0x1050eddd8282623b0c263ed6bdbd42370bbc28d3",
+    "amount_atomic": "1000000",
+    "amount_usdc": "1.000000",
+    "payment_signature_sent": false,
+    "payment_response_present": false,
+    "funds_moved_by_probe": false
+  },
+  "signed_discovery_binding": {
+    "live_contract_hash": "f961349f5ceffb4e172d23007f0c803f79fbb3ebf40a6b97d478377eca927c4c",
+    "signed_resolution_contract_hash": "f961349f5ceffb4e172d23007f0c803f79fbb3ebf40a6b97d478377eca927c4c",
+    "contract_hash_match": true,
+    "live_openapi_hash": "11dded05f8a125b32c37427203971d401e7e42d8eb6bce735a9c0d4ea8aa48a3",
+    "signed_resolution_openapi_hash": "11dded05f8a125b32c37427203971d401e7e42d8eb6bce735a9c0d4ea8aa48a3",
+    "openapi_hash_match": true
+  },
+  "scope": "Live no-funds boundary proof only. It proves public reachability to the unpaid x402 boundary and the advertised live contract/discovery bindings. It does not prove a completed paid sale, settlement, or LIVE Mark issuance.",
+  "payment_executed": false,
+  "live_mark_issued_by_probe": false
+}
