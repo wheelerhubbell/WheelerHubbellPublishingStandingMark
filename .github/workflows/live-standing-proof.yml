@@ -12,6 +12,9 @@ jobs:
   live-proof:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: direct-x402-acquisition-20260916
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -32,7 +35,6 @@ jobs:
 
           const health=await fetch(origin+'/healthz',{redirect:'error'});
           assert.equal(health.status,200);
-
           const contractResponse=await fetch(origin+'/v1/contract',{redirect:'error'});
           assert.equal(contractResponse.status,200);
           const contract=await contractResponse.json();
@@ -81,12 +83,8 @@ jobs:
             nodes:[signedNode],
             transitions:[]
           };
-
           const response=await fetch(origin+'/v1/evaluations',{
-            method:'POST',
-            redirect:'error',
-            headers:{'content-type':'application/json'},
-            body:canonical(submission)
+            method:'POST',redirect:'error',headers:{'content-type':'application/json'},body:canonical(submission)
           });
           const responseText=await response.text();
           assert.equal(response.status,402,`expected live 402, got ${response.status}: ${responseText.slice(0,500)}`);
@@ -108,10 +106,7 @@ jobs:
           assert.equal(resolution.payload.openapi.sha256,hash(openapi));
 
           const mcp=await fetch(origin+'/mcp',{
-            method:'POST',
-            redirect:'error',
-            headers:{'content-type':'application/json','accept':'application/json, text/event-stream','mcp-protocol-version':'2025-11-25'},
-            body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/list',params:{}})
+            method:'POST',redirect:'error',headers:{'content-type':'application/json','accept':'application/json, text/event-stream','mcp-protocol-version':'2025-11-25'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/list',params:{}})
           });
           assert.equal(mcp.status,200);
           const mcpData=await mcp.json();
@@ -123,28 +118,12 @@ jobs:
 
           console.log('LIVE_STANDING_PROOF');
           console.log(JSON.stringify({
-            observed_at:new Date().toISOString(),
-            repository:'wheelerhubbell/WheelerHubbellPublishingStandingMark',
-            origin,
-            health_http:health.status,
-            contract_http:contractResponse.status,
-            evaluation_http:response.status,
-            payment_required_header_present:true,
-            whp_buyer_proof_sent:false,
-            whp_buyer_proof_required_by_contract:false,
-            mcp_client_proof_required:false,
-            x402_version:terms.x402Version,
-            network:offered.network,
-            asset:offered.asset,
-            pay_to:offered.payTo,
-            amount_atomic:offered.amount,
-            amount_usdc:'1.000000',
-            payment_signature_sent:false,
-            payment_response_present:false,
-            funds_moved_by_probe:false,
-            live_contract_hash:hash(contract),
-            signed_resolution_contract_hash:resolution.payload.service_contract.sha256,
-            live_openapi_hash:hash(openapi),
-            signed_resolution_openapi_hash:resolution.payload.openapi.sha256
+            observed_at:new Date().toISOString(),repository:'wheelerhubbell/WheelerHubbellPublishingStandingMark',origin,
+            health_http:health.status,contract_http:contractResponse.status,evaluation_http:response.status,
+            payment_required_header_present:true,whp_buyer_proof_sent:false,whp_buyer_proof_required_by_contract:false,mcp_client_proof_required:false,
+            x402_version:terms.x402Version,network:offered.network,asset:offered.asset,pay_to:offered.payTo,amount_atomic:offered.amount,amount_usdc:'1.000000',
+            payment_signature_sent:false,payment_response_present:false,funds_moved_by_probe:false,
+            live_contract_hash:hash(contract),signed_resolution_contract_hash:resolution.payload.service_contract.sha256,
+            live_openapi_hash:hash(openapi),signed_resolution_openapi_hash:resolution.payload.openapi.sha256
           },null,2));
           NODE
