@@ -8,4 +8,6 @@ The public buyer contract requires no buyer Ed25519 key, WHP proof, registration
 
 Run the executable open-acquisition gate for changes to these relationships. Existing v1 129/107/83 reports remain historical at their pinned commits. Do not present them as new candidate evidence. Never weaken the A-to-B gate to a 402 boundary or one purchase. The LIVE release command must fail when actual verified LIVE chain evidence is absent.
 
+Justin explicitly authorized deploying the signed version before the real paid chain can execute. Deployment requires matching existing-root authorization and the complete executable TEST acquisition gate. Run the actual paid LIVE A-to-B chain after deployment; it remains mandatory before claiming production completion. Missing LIVE evidence must remain PENDING, never a successful chain, but must not prevent the deployment needed to execute it.
+
 The only production origin is https://wheelerhubbellpublishingstandingmark.netlify.app. The WHPStanding repository is read-only. No root generation, automated human outreach or spend outside an existing owner wallet policy.

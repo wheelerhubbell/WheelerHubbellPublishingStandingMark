@@ -1,6 +1,7 @@
 // Administration of the already-ratified v1.1 epoch. No key establishment.
-// prepare writes public staging files only. install/renew require LIVE evidence
-// before credentials are read or any remote configuration is changed.
+// prepare writes public staging files only. Remote administration verifies the
+// signed rules and full TEST gate before reading credentials. LIVE completion is
+// checked only after deployment; it is never asserted by this adapter.
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -67,7 +68,9 @@ async function previous(approval){
 
 function preparedPublication(approval,bundle,prior){
   const {current_production_authority_replaced,...publication}=approval.publication;
-  return {...publication,trust_bundle:bundle,historical_authority_url:ORIGIN+'/authority/history/'+prior.name+'.json',
+  return {...publication,trust_bundle:bundle,production_activation_requires:'Matching existing-root authorization, runtime configuration and successful open-acquisition TEST gate.',
+    production_completion_requires:'After deployment, the unchanged LIVE release gate must verify the real paid A-to-B chain.',
+    historical_authority_url:ORIGIN+'/authority/history/'+prior.name+'.json',
     authorization_ratification_url:ORIGIN+'/authority/ratifications/open-acquisition-v1.1/root.json'};
 }
 
@@ -83,15 +86,37 @@ async function stage(directory,approval,bundle,prior){
   await mkdir(join(dir,'history'),{recursive:true});
   await immutableWrite(join(dir,'history',prior.name+'.json'),prior.raw);
   await immutableWrite(join(dir,'history',prior.name+'.trust-bundle.json'),prior.trustRaw);
+  const current=await publicCandidate(approval,prior);
+  if(current&&hash(current.bundle)!==hash(bundle)){
+    await immutableWrite(join(dir,'history',hash(current.publication)+'.json'),current.raw);
+    await immutableWrite(join(dir,'history',hash(current.publication)+'.trust-bundle.json'),current.trustRaw);
+  }
   await immutableWrite(join(dir,'root.json'),canonical(preparedPublication(approval,bundle,prior))+'\n');
   await immutableWrite(join(dir,'trust-bundle.json'),canonical(bundle)+'\n');
-  return {prepared:true,directory:dir,root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,trust_bundle_sha256:hash(bundle),status_sequence:bundle.status_snapshot.payload.sequence,production_configuration_changed:false,deployed:false};
+  return {prepared:true,directory:dir,root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,trust_bundle_sha256:hash(bundle),status_sequence:bundle.status_snapshot.payload.sequence,production_configuration_changed:false,deployed:false,production_completion:false};
 }
 
-function releaseGate(){
-  // This is the unchanged LIVE gate, not a TEST or unpaid-probe substitute.
-  try{execFileSync(process.execPath,['scripts/check-live-chain.mjs'],{stdio:'inherit',env:process.env});}
-  catch{demand(false,'LIVE_RELEASE_GATE_REQUIRED');}
+async function publicCandidate(approval,prior){
+  const raw=await readFile('public/authority/root.json','utf8'),publication=parseStrict(raw,1048576);
+  if(hash(publication)===prior.name)return null;
+  const bundle=publication.trust_bundle;
+  candidate(bundle,approval,statusTime(bundle,now()));
+  demand(hash(publication)===hash(preparedPublication(approval,bundle,prior)),'CURRENT_PUBLICATION_MISMATCH');
+  const trustRaw=await readFile('public/authority/trust-bundle.json','utf8');
+  demand(hash(parseStrict(trustRaw,1048576))===hash(bundle),'CURRENT_PUBLIC_FILES_DISAGREE');
+  return {publication,bundle,raw,trustRaw};
+}
+
+export async function readApprovedPublicAuthority(){
+  const approval=await approved(),prior=await previous(approval),current=await publicCandidate(approval,prior);
+  demand(current,'PUBLISHED_CANDIDATE_REQUIRED');
+  candidate(current.bundle,approval);
+  return current.publication;
+}
+
+function deploymentGate(){
+  try{execFileSync('npm',['run','check:open-acquisition'],{stdio:'inherit',env:process.env});}
+  catch{demand(false,'OPEN_ACQUISITION_GATE_REQUIRED');}
 }
 
 async function runtime(site,approval,prior){
@@ -110,9 +135,9 @@ async function runtime(site,approval,prior){
 }
 
 function follows(next,current,approval){
-  if(current.epoch==='previous')demand(hash(next.status_snapshot)===hash(approval.bundle.status_snapshot),'INITIAL_RATIFIED_STATUS_REQUIRED');
-  else if(hash(next)!==hash(current.bundle)){
-    const s=next.status_snapshot.payload,old=current.bundle.status_snapshot;
+  const base=current.epoch==='previous'?approval.bundle:current.bundle;
+  if(hash(next)!==hash(base)){
+    const s=next.status_snapshot.payload,old=base.status_snapshot;
     demand(s.sequence===old.payload.sequence+1&&s.previous_hash===hash(old),'NEXT_STATUS_SNAPSHOT_REQUIRED');
   }
 }
@@ -128,14 +153,15 @@ async function installBundle(site,bundle,approval,prior,expected){
   const back=await variable(site,'WHP_TRUST_BUNDLE_JSON');
   demand(back?.values?.length===1&&back.values[0].context==='production'&&hash(parseStrict(value(back),1048576))===hash(bundle),'AUTHORITY_INSTALL_READBACK_FAILED');
   await runtime(site,approval,prior);
-  return {production_configuration_changed:hash(bundle)!==hash(current.bundle),runtime_configuration_readback_verified:true,root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,trust_bundle_sha256:hash(bundle),status_sequence:bundle.status_snapshot.payload.sequence,private_keys_changed:false,deployed:false};
+  return {production_configuration_changed:hash(bundle)!==hash(current.bundle),runtime_configuration_readback_verified:true,root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,trust_bundle_sha256:hash(bundle),status_sequence:bundle.status_snapshot.payload.sequence,private_keys_changed:false,deployed:false,production_completion:false};
 }
 
 export async function administer(mode,directory){
-  demand(['prepare','install','renew'].includes(mode)&&directory,'PREPARE_INSTALL_OR_RENEW_AND_DIRECTORY_REQUIRED');
-  if(mode!=='prepare')releaseGate();
+  demand(['prepare','install','renew','sync'].includes(mode)&&directory,'PREPARE_INSTALL_RENEW_OR_SYNC_AND_DIRECTORY_REQUIRED');
   const approval=await approved(),prior=await previous(approval);
-  if(mode==='prepare')return stage(directory,approval,approval.bundle,prior);
+  const published=await publicCandidate(approval,prior);
+  if(mode==='prepare')return stage(directory,approval,published?.bundle??approval.bundle,prior);
+  deploymentGate();
   const site=await target(),current=await runtime(site,approval,prior);
   if(mode==='install'){
     const bundle=await read(join(directory,'trust-bundle.json')),publication=await read(join(directory,'root.json'));
@@ -144,18 +170,34 @@ export async function administer(mode,directory){
     demand(await readFile(join(directory,'history',prior.name+'.json'),'utf8')===prior.raw&&await readFile(join(directory,'history',prior.name+'.trust-bundle.json'),'utf8')===prior.trustRaw,'PREPARED_HISTORY_MISMATCH');
     return installBundle(site,bundle,approval,prior,current);
   }
-  demand(current.epoch==='candidate','ACTIVE_CANDIDATE_REQUIRED_FOR_RENEWAL');
+  if(mode==='renew')demand(current.epoch==='candidate','ACTIVE_CANDIDATE_REQUIRED_FOR_RENEWAL');
+  const bundle=structuredClone(current.epoch==='candidate'?current.bundle:approval.bundle),old=bundle.status_snapshot,at=now();
+  if(published){
+    demand(current.epoch==='candidate','PUBLISHED_CANDIDATE_REQUIRES_MATCHING_RUNTIME');
+    const s=current.bundle.status_snapshot.payload,p=published.bundle.status_snapshot;
+    demand(s.sequence>=p.payload.sequence,'RUNTIME_STATUS_ROLLBACK');
+    if(s.sequence===p.payload.sequence)demand(hash(old)===hash(p),'RUNTIME_PUBLIC_STATUS_CONFLICT');
+    else demand(s.sequence===p.payload.sequence+1&&s.previous_hash===hash(p),'RUNTIME_PUBLIC_STATUS_CHAIN_MISMATCH');
+  }
+  if(mode==='sync'&&old.payload.valid_until>=at+64800){
+    await stage(directory,approval,bundle,prior);
+    return {...await installBundle(site,bundle,approval,prior,current),prepared_directory:resolve(directory),status_renewed:false};
+  }
   const record=await variable(site,'WHP_AUTHORITY_CUSTODY_V2');
   demand(record?.values?.length===1&&record.values[0].context==='dev','EXISTING_DEV_CUSTODY_REQUIRED');
   const custody=parseStrict(value(record,'dev'),1048576);
   demand(custody.root_pin===ROOT_PIN&&custody.issuer_key_id===ISSUER_ID&&keyId(publicDer(custody.root_private_key))===ROOT_PIN&&keyId(publicDer(custody.issuer_private_key))===ISSUER_ID,'EXISTING_CUSTODY_IDENTITY_MISMATCH');
-  const bundle=structuredClone(current.bundle),old=bundle.status_snapshot,at=now();
   const until=Math.min(at+86400,bundle.profile_authorization.payload.valid_until,...bundle.certificates.map(c=>c.payload.valid_until));
   demand(until>at+3600,'EXISTING_AUTHORITY_EXPIRES_SOON');
   bundle.status_snapshot=seal('WHP-TRUST-STATUS-v1',{...old.payload,sequence:old.payload.sequence+1,previous_hash:hash(old),valid_from:at-30,valid_until:until},custody.root_private_key);
   candidate(bundle,approval,at);
   await stage(directory,approval,bundle,prior);
-  return {...await installBundle(site,bundle,approval,prior,current),prepared_directory:resolve(directory),profile_authorization_changed:false,certificates_changed:false,revocations_changed:false};
+  if(current.epoch==='candidate'&&(!published||hash(current.bundle)!==hash(published.bundle))){
+    const publication=preparedPublication(approval,current.bundle,prior),name=hash(publication);
+    await immutableWrite(join(resolve(directory),'history',name+'.json'),canonical(publication)+'\n');
+    await immutableWrite(join(resolve(directory),'history',name+'.trust-bundle.json'),canonical(current.bundle)+'\n');
+  }
+  return {...await installBundle(site,bundle,approval,prior,current),prepared_directory:resolve(directory),status_renewed:true,profile_authorization_changed:false,certificates_changed:false,revocations_changed:false};
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){

@@ -6,6 +6,6 @@ The public interaction is `POST assessment → 402 → owner-authorized standard
 
 A public GitHub repository controller can supply exact source and transformation grants with its object. WHP mechanically verifies repository control and the bounded authority chain. Payment establishes only payment. Mark A supplies discovery; B's own evidence supplies eligibility.
 
-`npm run check:open-acquisition` enforces the full A-to-B chain in clean processes using the real standard x402 client, plus negative and recovery gates. `npm run check:release` additionally requires verified LIVE chain evidence and fails when it is missing. This candidate currently has TEST evidence only and is not production completion.
+`npm run check:open-acquisition` enforces the full A-to-B chain in clean processes using the real standard x402 client, plus negative and recovery gates. Deployment requires that gate and matching existing-root authorization. After deployment, `npm run check:release` additionally requires verified LIVE chain evidence and fails when it is missing. Deploying the service enables that real execution; deployment alone does not establish production completion.
 
 Read [the exact v1.1 contract and evidence boundaries](docs/OPEN-ACQUISITION-v1.1.md), [namespace admission](public/namespace-authority.md), and [the optional reference buyer](public/buyer/README.md). Historical v1 contracts, verifier bytes and evidence retain their original scope under `docs/contracts`, hash-addressed public artifacts, and `legacy/v1`.
