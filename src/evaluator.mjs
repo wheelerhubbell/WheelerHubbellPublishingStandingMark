@@ -1,12 +1,13 @@
 import { hash, canonical, demand } from './canonical.mjs';
 import { authorize, validateTrust } from './authority.mjs';
 import { validateSubmission } from './validation.mjs';
+import {attachNamespaceEvidence} from './namespace-authority.mjs';
 import { OPERATIONS, profile } from './profile.mjs';
 
 // Pure, bounded evaluator. No network, payments, clock reads, storage, or LLM calls.
-export function evaluate(s, trustBundle, rootPin, evaluatedAt) {
+export function evaluate(s, trustBundle, rootPin, evaluatedAt, authorityEvidence=[]) {
   validateSubmission(s);
-  const trust=validateTrust(trustBundle,rootPin,evaluatedAt);
+  const trust=attachNamespaceEvidence(validateTrust(trustBundle,rootPin,evaluatedAt),s,authorityEvidence);
   const checks=[], failures=[]; let expiry=Math.min(s.bounds.valid_until,trust.profile.valid_until,evaluatedAt+profile().max_validity_seconds);
   const check=(rule,object,ok,detail)=>{const row={rule,object,passed:!!ok,detail};checks.push(row);if(!ok)failures.push(row);};
   const nodes=new Map(s.nodes.map(e=>[hash(e.payload),e]));
@@ -55,7 +56,7 @@ export function evaluate(s, trustBundle, rootPin, evaluatedAt) {
   check('REQUESTED_OPERATION',s.object.root,allOperations.has(s.requested_operation),'The requested operation must survive every source, warrant and unresolved blocking unknown.');
   const established=failures.length===0;
   return {
-    version:'WHP-STANDING-DECISION-v1',evaluated_at:evaluatedAt,submission_hash:hash(s),
+    version:'WHP-STANDING-DECISION-v1.1',evaluated_at:evaluatedAt,submission_hash:hash(s),
     object:s.object,profile:s.profile,bounds:s.bounds,requested_operation:s.requested_operation,
     outcome:established?'ESTABLISHED':'NOT_ESTABLISHED',
     permitted_operations:established?OPERATIONS.filter(op=>allOperations.has(op)):[],

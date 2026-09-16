@@ -1,0 +1,27 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> whp-standing@1.0.0 check:acquisition-repair
+> npm run build:buyer && node --test test/acquisition-repair.test.mjs --test-reporter=tap
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> whp-standing@1.0.0 build:buyer
+> node scripts/package-buyer.mjs
+
+{"path":"/buyer/standing-buyer.tar.gz","sha256":"b48a0b2e62a41c41bc4fe5965cbce67866708c3f96b594f203776e6400fa9442","files":16}
+✔ production entry catches async request faults before storage/payment and preserves internal 503 (80.200054ms)
+✔ published discovery downloads runnable buyer; production entry returns independently verified TEST Mark and unchanged signed graph (730.223977ms)
+✔ production buyer preserves a negative assessment without manufacturing a Mark (483.041776ms)
+✔ pending settlement survives both durable stores reopening and recovers without another wallet signature or transfer (456.026762ms)
+✔ lost paid response and lost pre-send request replay the same purchase and authorization (972.035502ms)
+✔ temporary failure after durable authorization is pending and recovery never signs again (503.03796ms)
+✔ public path retains budget, exact quote/nonce binding and immutable submission identity (513.732485ms)
+✔ frozen contract, profile and standalone verifier commitments remain unchanged (5.468495ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3869.606394

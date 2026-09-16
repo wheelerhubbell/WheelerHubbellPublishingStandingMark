@@ -1,4 +1,5 @@
 [build]
+  command = "npm run check:activation && npm run check:release"
   publish = "public"
   functions = "netlify/functions"
 

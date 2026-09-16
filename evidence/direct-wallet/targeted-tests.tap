@@ -1,0 +1,35 @@
+TAP version 13
+# Subtest: existing viem wallet signs published instructions; exactly two HTTP acquisition requests and independent verification, no buyer install
+ok 1 - existing viem wallet signs published instructions; exactly two HTTP acquisition requests and independent verification, no buyer install
+  ---
+  duration_ms: 371.167473
+  type: 'test'
+  ...
+# Generic wallet library: viem 2.56.3; real local EIP-712 signature; no chain or funds
+# Subtest: MCP exposes direct wallet and recover; pending and lost-response recovery reuse durable identity after restart and expiry
+ok 2 - MCP exposes direct wallet and recover; pending and lost-response recovery reuse durable identity after restart and expiry
+  ---
+  duration_ms: 357.342298
+  type: 'test'
+  ...
+# Subtest: unadmitted source is identified in unpaid checkout; paid negative assessment remains negative
+ok 3 - unadmitted source is identified in unpaid checkout; paid negative assessment remains negative
+  ---
+  duration_ms: 265.46364
+  type: 'test'
+  ...
+# Subtest: server preparation cannot bypass wallet policy, alter exact binding or create fresh authorization on retry
+ok 4 - server preparation cannot bypass wallet policy, alter exact binding or create fresh authorization on retry
+  ---
+  duration_ms: 82.799157
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1379.881872

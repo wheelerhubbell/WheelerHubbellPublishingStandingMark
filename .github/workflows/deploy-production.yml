@@ -33,6 +33,14 @@ jobs:
         with:
           node-version: '24'
       - run: npm ci --ignore-scripts
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install -r requirements-verification.txt
+      - name: Refuse activation under a different cryptographic contract
+        run: npm run check:activation
+      - name: Require the full candidate and independently verified LIVE chain before production mutation
+        run: npm run check:release
       - name: Fresh establishment and matching existing configuration
         if: github.event_name == 'workflow_dispatch'
         run: |

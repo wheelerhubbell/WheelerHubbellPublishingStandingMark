@@ -24,7 +24,7 @@ export function fixture({at=NOW}={}){
   const att=n=>seal('WHP-SOURCE-ATTESTATION-v1',n,source.privateKey);
   const edge={from:[hash(leaf)],to:hash(target),transform:'COPY',operations:['INFORM','RECOMMEND'],...bounds,valid_from:at-500,valid_until:at+7200,
     warrant:{statement:'Exact COPY of this source for INFORM or RECOMMEND only; all qualifiers and unknowns retained.',evidence_hashes:[hash(leaf)]}};
-  const submission={version:'WHP-STANDING-SUBMISSION-v1',client_reference:'test-'+randomHex(16),buyer_key:publicDer(buyer.privateKey),profile:{id:PROFILE_ID,version:PROFILE_VERSION,sha256:PROFILE_HASH},
+  const submission={version:'WHP-STANDING-SUBMISSION-v1.1',client_reference:randomHex(32),authority:[],profile:{id:PROFILE_ID,version:PROFILE_VERSION,sha256:PROFILE_HASH},
     object:{id:target.id,version:target.version,root:hash(target)},bounds,requested_operation:'INFORM',nodes:[att(leaf),att(target)],transitions:[seal('WHP-TRANSITION-WARRANT-v1',edge,transition.privateKey)]};
   const requirements={scheme:'exact',network:'eip155:8453',amount:'1000000',asset:'0x'+'11'.repeat(20),payTo:'0x'+'22'.repeat(20),maxTimeoutSeconds:300,
     extra:{assetTransferMethod:'eip3009',paymentFlow:'authorization',name:'USDC',version:'2'}};

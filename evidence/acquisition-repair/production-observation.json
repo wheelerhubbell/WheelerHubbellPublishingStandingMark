@@ -1,0 +1,317 @@
+{
+  "observed_at": "2026-09-16T10:45:16.066Z",
+  "origin": "https://wheelerhubbellpublishingstandingmark.netlify.app",
+  "baseline_main": "5e5a9dfc45e9b605d37bec433d4b5cfc874af612",
+  "deployment_commit_linkage": "Netlify current deploy has commit_ref:null; public behavior observed separately.",
+  "commitments": {
+    "profile": "4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab",
+    "contract": "dd433c055fe0ad0bdb0326479b3339eea018204ccef44cd6ef247520a29c8e75",
+    "verifier": "bb8cb78205f1892dcbf00d845cf85e504a0efacf2a0d8a793313fa8c0e99b833",
+    "verifier_bytes_checked": true,
+    "contract_regenerated": false
+  },
+  "root_pin": "e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc",
+  "root_comparison": "Matches recovered repository public root; not independent institutional admission.",
+  "authority_certificates": [
+    {
+      "key_id": "8d65f5a4057eedb76ac3db83e9217a374c0072adfa3986b4745e4b5b5bbb22e8",
+      "jurisdictions": [
+        "protocol-structural-assessment-only"
+      ],
+      "operations": [
+        "INFORM",
+        "RECOMMEND",
+        "EXECUTE"
+      ],
+      "profile_hash": "4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab",
+      "public_key": "MCowBQYDK2VwAyEA4Dpn8gVpkyLki7i46f0Vm0NHpXklxByRj7NyMZemSsU=",
+      "roles": [
+        "ISSUER",
+        "REGISTRY",
+        "DISCOVERY"
+      ],
+      "scopes": [
+        "whp-standing-structured-passage"
+      ],
+      "subject": "Wheeler Hubbell Publishing — WHP Standing v1 issuer and registry",
+      "valid_from": 1789514412,
+      "valid_until": 1821050442
+    },
+    {
+      "key_id": "fa8b6153645e3f5d1d2207c108f7e0128b5eca932e405a142666840857d46aba",
+      "jurisdictions": [
+        "protocol-structural-assessment-only"
+      ],
+      "operations": [
+        "INFORM"
+      ],
+      "profile_hash": "4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab",
+      "public_key": "MCowBQYDK2VwAyEAja/x5Ywa7B0DkdDdMRSyKxZJ/DDXZxN7SYemvVk/+is=",
+      "roles": [
+        "SOURCE"
+      ],
+      "scopes": [
+        "whp-standing-structured-passage"
+      ],
+      "subject": "Wheeler Hubbell Publishing — attestations of WHP-controlled protocol identity records only",
+      "valid_from": 1789514412,
+      "valid_until": 1821050442
+    }
+  ],
+  "object_checked": {
+    "submission": {
+      "version": "WHP-STANDING-SUBMISSION-v1",
+      "client_reference": "repair-unpaid-3a86c3f3-0012-426f-9100-58a4062bedde",
+      "buyer_key": "MCowBQYDK2VwAyEAiFGW7CzLVQtiWUdA3AkabG+KuuQ1saPdwSDTGykJKsY=",
+      "profile": {
+        "id": "WHP-STANDING-STRUCTURED-PASSAGE",
+        "version": "1.0.0",
+        "sha256": "4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab"
+      },
+      "object": {
+        "id": "urn:whp:standing:controlled-production-contract",
+        "version": "1",
+        "root": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12"
+      },
+      "bounds": {
+        "scope": "whp-standing-structured-passage",
+        "jurisdiction": "protocol-structural-assessment-only",
+        "valid_from": 1789555496,
+        "valid_until": 1789555797
+      },
+      "requested_operation": "INFORM",
+      "nodes": [
+        {
+          "payload": {
+            "content": {
+              "authorized_production_origin": "https://wheelerhubbellpublishingstandingmark.netlify.app",
+              "contract_sha256": "dd433c055fe0ad0bdb0326479b3339eea018204ccef44cd6ef247520a29c8e75",
+              "issuer": "Wheeler Hubbell Publishing",
+              "kind": "WHP-CONTROLLED-PROTOCOL-IDENTITY-v1",
+              "meaning": "This records WHP controlled protocol commitments, not service readiness or the truth of external claims.",
+              "profile_sha256": "4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab",
+              "verifier_sha256": "bb8cb78205f1892dcbf00d845cf85e504a0efacf2a0d8a793313fa8c0e99b833"
+            },
+            "epistemic_status": "REPORT",
+            "id": "urn:whp:standing:controlled-production-contract",
+            "jurisdiction": "protocol-structural-assessment-only",
+            "locator": "https://wheelerhubbellpublishingstandingmark.netlify.app/authority/source-admission.json",
+            "operations": [
+              "INFORM"
+            ],
+            "prior_hash": null,
+            "qualifiers": [
+              "WHP-controlled protocol identity only; no external factual or legal authority.",
+              "No service-readiness or payment observation is asserted."
+            ],
+            "scope": "whp-standing-structured-passage",
+            "status": "ACTIVE",
+            "unknowns": [],
+            "valid_from": 1789514412,
+            "valid_until": 1821050442,
+            "version": "1"
+          },
+          "protected": {
+            "algorithm": "Ed25519",
+            "canonicalization": "WHP-JCS-I1",
+            "key_id": "fa8b6153645e3f5d1d2207c108f7e0128b5eca932e405a142666840857d46aba",
+            "type": "WHP-SOURCE-ATTESTATION-v1"
+          },
+          "signature": "fzc27rhgZdk0maE5wxw5kYHrDSAKgURyj8vuPi/BAmQbi+cygwBwg0WFV9BzaULaQPklfrib5AIUq4kuyfTyBw=="
+        }
+      ],
+      "transitions": []
+    },
+    "decision": {
+      "version": "WHP-STANDING-DECISION-v1",
+      "evaluated_at": 1789555497,
+      "submission_hash": "a9fcd5750857a87d4f013180130c9a7a22af540b43073da587b22cdda1feef9a",
+      "object": {
+        "id": "urn:whp:standing:controlled-production-contract",
+        "version": "1",
+        "root": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12"
+      },
+      "profile": {
+        "id": "WHP-STANDING-STRUCTURED-PASSAGE",
+        "version": "1.0.0",
+        "sha256": "4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab"
+      },
+      "bounds": {
+        "scope": "whp-standing-structured-passage",
+        "jurisdiction": "protocol-structural-assessment-only",
+        "valid_from": 1789555496,
+        "valid_until": 1789555797
+      },
+      "requested_operation": "INFORM",
+      "outcome": "ESTABLISHED",
+      "permitted_operations": [
+        "INFORM"
+      ],
+      "components": {
+        "SOURCE": "ESTABLISHED",
+        "CONTEXT": "ESTABLISHED",
+        "RELATION": "NOT_ASSESSED",
+        "PASSAGE": "NOT_ASSESSED",
+        "UNKNOWN": "ESTABLISHED",
+        "CONTINUITY": "NOT_ASSESSED",
+        "ACTION_BOUNDARY": "NOT_ASSESSED"
+      },
+      "effective_at": 1789555497,
+      "expires_at": 1789555797,
+      "checks": [
+        {
+          "rule": "SOURCE_IDENTITY",
+          "object": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12",
+          "passed": true,
+          "detail": "Root hash, identifier and version must identify the same submitted object."
+        },
+        {
+          "rule": "ASSESSMENT_TIME",
+          "object": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12",
+          "passed": true,
+          "detail": "The assessment must fall within the requested time window."
+        },
+        {
+          "rule": "SOURCE_AUTHORITY",
+          "object": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12",
+          "passed": true,
+          "detail": "An admitted source key must attest within its signed scope, operations and validity."
+        },
+        {
+          "rule": "SOURCE_ACTIVE",
+          "object": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12",
+          "passed": true,
+          "detail": "Non-active source versions cannot carry operative standing in this profile."
+        },
+        {
+          "rule": "SOURCE_BOUNDS",
+          "object": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12",
+          "passed": true,
+          "detail": "Source jurisdiction and scope must match the requested bounds exactly."
+        },
+        {
+          "rule": "SOURCE_TIME",
+          "object": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12",
+          "passed": true,
+          "detail": "Source validity must contain the requested time window."
+        },
+        {
+          "rule": "GRAPH_CLOSURE",
+          "object": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12",
+          "passed": true,
+          "detail": "Every submitted source must be connected to the root; cycles and missing references are forbidden."
+        },
+        {
+          "rule": "REQUESTED_OPERATION",
+          "object": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12",
+          "passed": true,
+          "detail": "The requested operation must survive every source, warrant and unresolved blocking unknown."
+        }
+      ],
+      "unknowns": [
+        {
+          "source_hash": "ca2dda286ca4a4f94e20615dad5f9956813315d1697bc6303df5da6266114f12",
+          "unknowns": []
+        }
+      ],
+      "assessment_boundary": "Exact submitted signed JSON artifacts and COPY/COMPOSE transitions under admitted authority certificates. Relations assessed here are only the declared COPY and COMPOSE relations.",
+      "not_assessed": [
+        "Substantive truth of source assertions",
+        "Authenticity of an external locator beyond the admitted signer's attestation",
+        "Completeness of evidence outside the submitted graph",
+        "General natural-language inference",
+        "Execution or behavior of a submitted external workflow",
+        "External legal or domain authority",
+        "Legal compliance, safety or universal truth",
+        "Continuity of versions outside the submitted graph"
+      ],
+      "review_triggers": [
+        "Assessed object or version changes",
+        "Source or authority withdrawal, correction, dispute or expiry",
+        "Profile or governing conditions change"
+      ]
+    },
+    "scope": "The existing WHP-controlled protocol identity record only. Public TEST example buyer_key used as an unpaid probe identity, not as source authority."
+  },
+  "outside_object": {
+    "supplied": false,
+    "eligible_authorization_found": false,
+    "missing": "Existing-root admission of the actual outside SOURCE signing key for the exact object scope, jurisdiction, operations and validity; for COPY/COMPOSE, admission of a TRANSITION signer and an exact signed warrant. No outside object or signer is supplied, so no object-specific admission can be asserted."
+  },
+  "live_payment_executed": false,
+  "live_mark_issued": false,
+  "trace": [
+    {
+      "at": "2026-09-16T10:44:57.154Z",
+      "method": "GET",
+      "path": "/.well-known/whp-standing.json",
+      "status": 200,
+      "body_sha256": "3f6ef9cd1396d545d670f42bb7af6826750edaa56536015aeea23e3143d385d3",
+      "request_id": "01M2MX3NVQTAF355V5VN0YBQXM",
+      "body": "{\"capability_id\":\"urn:whp:standing:capability:1\",\"completion_claim\":\"No claim of live issuance follows from discovery or health.\",\"contract_url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/contract\",\"environment\":\"LIVE\",\"evaluation_url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/evaluations\",\"input_schema\":\"/schemas/submission.schema.json\",\"issuer\":\"Wheeler Hubbell Publishing\",\"issuer_certificate\":{\"payload\":{\"jurisdictions\":[\"protocol-structural-assessment-only\"],\"operations\":[\"INFORM\",\"RECOMMEND\",\"EXECUTE\"],\"profile_hash\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"public_key\":\"MCowBQYDK2VwAyEA4Dpn8gVpkyLki7i46f0Vm0NHpXklxByRj7NyMZemSsU=\",\"roles\":[\"ISSUER\",\"REGISTRY\",\"DISCOVERY\"],\"scopes\":[\"whp-standing-structured-passage\"],\"subject\":\"Wheeler Hubbell Publishing — WHP Standing v1 issuer and registry\",\"valid_from\":1789514412,\"valid_until\":1821050442},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc\",\"type\":\"WHP-AUTHORITY-CERTIFICATE-v1\"},\"signature\":\"Ay7WiZ3TQ/F9ucn0L1OWdivXIj2h3GTx95BntiZh247D2DsmMo+ZcllfnxSC0SvBuOZI/znw5kFG/aTf4IzLAQ==\"},\"max_nodes\":64,\"max_transitions\":64,\"mcp_url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/mcp\",\"payment_binding\":\"EIP-3009 nonce = SHA256(WHP-STANDING-PURCHASE-BINDING-v1 plus complete signed quote payload). Client must support this binding; generic random-nonce clients are not silently accepted.\",\"payment_protocol\":\"x402-v2\",\"profile\":{\"assessed\":\"Exact submitted signed JSON artifacts and COPY/COMPOSE transitions under admitted authority certificates. Relations assessed here are only the declared COPY and COMPOSE relations.\",\"criteria\":[\"SOURCE_SIGNATURE_AND_IDENTITY\",\"TRUSTED_SCOPED_AUTHORITY\",\"CONNECTED_ACYCLIC_GRAPH\",\"EXACT_CONTENT_TRANSFORMATION\",\"QUALIFIERS_PRESERVED\",\"UNKNOWNS_PRESERVED\",\"EXPLICIT_TRANSITION_WARRANT\",\"OPERATION_NOT_ESCALATED\",\"TEMPORAL_INTERSECTION\",\"JURISDICTION_AND_SCOPE\"],\"failure_outcome\":\"Signed assessment record; no Standing Mark\",\"id\":\"WHP-STANDING-STRUCTURED-PASSAGE\",\"implementation_status\":\"PUBLIC_V1_REQUIRES_EXPLICIT_ISSUER_RATIFICATION\",\"marks\":[\"SOURCE\",\"CONTEXT\",\"RELATION\",\"PASSAGE\",\"UNKNOWN\"],\"max_validity_seconds\":86400,\"not_assessed\":[\"Substantive truth of source assertions\",\"Authenticity of an external locator beyond the admitted signer's attestation\",\"Completeness of evidence outside the submitted graph\",\"General natural-language inference\",\"Execution or behavior of a submitted external workflow\",\"External legal or domain authority\",\"Legal compliance, safety or universal truth\",\"Continuity of versions outside the submitted graph\"],\"operations\":[\"INFORM\",\"RECOMMEND\",\"EXECUTE\"],\"payment_policy\":\"Payment purchases an evaluation, never a favorable result. Identical purchase recovery does not create a new payment authorization.\",\"review_triggers\":[\"Assessed object or version changes\",\"Source or authority withdrawal, correction, dispute or expiry\",\"Profile or governing conditions change\"],\"title\":\"Structured provenance and passage integrity\",\"transforms\":[\"COPY\",\"COMPOSE\"],\"version\":\"1.0.0\"},\"profile_authorization\":{\"payload\":{\"contract_hash\":\"dd433c055fe0ad0bdb0326479b3339eea018204ccef44cd6ef247520a29c8e75\",\"environment\":\"LIVE\",\"issuer\":\"Wheeler Hubbell Publishing\",\"profile_hash\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"ratified\":true,\"valid_from\":1789514412,\"valid_until\":1821050442,\"verifier_sha256\":\"bb8cb78205f1892dcbf00d845cf85e504a0efacf2a0d8a793313fa8c0e99b833\"},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc\",\"type\":\"WHP-PROFILE-AUTHORIZATION-v1\"},\"signature\":\"dhMYJ5HHc7A8D6AV56oAfxIXRLfKm+1MRbVoki8ENHazbbsOOG1wRR+r9iohf6xP1qvIPnwDQFmub99QQ7l5BQ==\"},\"profile_url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/profiles/WHP-STANDING-STRUCTURED-PASSAGE/1.0.0\",\"registry_url_template\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/registry/{purchase_id}\",\"request_limit_bytes\":262144,\"required_extension\":\"whp-standing\",\"resolution_url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/standing-capability.json\",\"result_schema\":\"/schemas/result.schema.json\",\"retrieval_charge\":\"0\",\"review_url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/reviews\",\"root_pin\":\"e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc\",\"root_public_key\":\"MCowBQYDK2VwAyEAe5ZSb/1Fd/H07rWeEJIQ9i07ge4Ei/wwAjYyI5IhAmw=\",\"service\":\"WHP Standing\",\"trust_bundle\":{\"certificates\":[{\"payload\":{\"jurisdictions\":[\"protocol-structural-assessment-only\"],\"operations\":[\"INFORM\",\"RECOMMEND\",\"EXECUTE\"],\"profile_hash\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"public_key\":\"MCowBQYDK2VwAyEA4Dpn8gVpkyLki7i46f0Vm0NHpXklxByRj7NyMZemSsU=\",\"roles\":[\"ISSUER\",\"REGISTRY\",\"DISCOVERY\"],\"scopes\":[\"whp-standing-structured-passage\"],\"subject\":\"Wheeler Hubbell Publishing — WHP Standing v1 issuer and registry\",\"valid_from\":1789514412,\"valid_until\":1821050442},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc\",\"type\":\"WHP-AUTHORITY-CERTIFICATE-v1\"},\"signature\":\"Ay7WiZ3TQ/F9ucn0L1OWdivXIj2h3GTx95BntiZh247D2DsmMo+ZcllfnxSC0SvBuOZI/znw5kFG/aTf4IzLAQ==\"},{\"payload\":{\"jurisdictions\":[\"protocol-structural-assessment-only\"],\"operations\":[\"INFORM\"],\"profile_hash\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"public_key\":\"MCowBQYDK2VwAyEAja/x5Ywa7B0DkdDdMRSyKxZJ/DDXZxN7SYemvVk/+is=\",\"roles\":[\"SOURCE\"],\"scopes\":[\"whp-standing-structured-passage\"],\"subject\":\"Wheeler Hubbell Publishing — attestations of WHP-controlled protocol identity records only\",\"valid_from\":1789514412,\"valid_until\":1821050442},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc\",\"type\":\"WHP-AUTHORITY-CERTIFICATE-v1\"},\"signature\":\"RWvGXLQf2BlB6pDozRdRBEkJthOMRnLmQwUV0H0In95yvCvpAtuXza22PisijJy/zrizzcDmRubmdMPYvkF8DQ==\"}],\"profile_authorization\":{\"payload\":{\"contract_hash\":\"dd433c055fe0ad0bdb0326479b3339eea018204ccef44cd6ef247520a29c8e75\",\"environment\":\"LIVE\",\"issuer\":\"Wheeler Hubbell Publishing\",\"profile_hash\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"ratified\":true,\"valid_from\":1789514412,\"valid_until\":1821050442,\"verifier_sha256\":\"bb8cb78205f1892dcbf00d845cf85e504a0efacf2a0d8a793313fa8c0e99b833\"},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc\",\"type\":\"WHP-PROFILE-AUTHORIZATION-v1\"},\"signature\":\"dhMYJ5HHc7A8D6AV56oAfxIXRLfKm+1MRbVoki8ENHazbbsOOG1wRR+r9iohf6xP1qvIPnwDQFmub99QQ7l5BQ==\"},\"revocations\":[],\"root_public_key\":\"MCowBQYDK2VwAyEAe5ZSb/1Fd/H07rWeEJIQ9i07ge4Ei/wwAjYyI5IhAmw=\",\"status_snapshot\":{\"payload\":{\"certificates_hash\":\"73918066e6d111cb0e6a3e6877af33f64a78d80fd059e22052745c12d89ab789\",\"previous_hash\":\"019363964769ed8014e11aebaa5c3ea4905881cb29ebf50f55e09124e94b0118\",\"profile_authorization_hash\":\"4728937a49f67c1e556581ced87bd515928742255b7256b12e4e5ebb88a8b15e\",\"revocations_hash\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"sequence\":1,\"valid_from\":1789540417,\"valid_until\":1789626847},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc\",\"type\":\"WHP-TRUST-STATUS-v1\"},\"signature\":\"I1toWaKnhD41xmEUDE02gPq31nU6T6Lo+QDKJytfH7iK14JN8pD4IJiMDGCB/6UalU3rLoCz5yt+w4NIojcLDA==\"}},\"verification_url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/verification\",\"version\":\"1.0.0\"}\n"
+    },
+    {
+      "at": "2026-09-16T10:44:57.313Z",
+      "method": "GET",
+      "path": "/authority/source-admission.json",
+      "status": 200,
+      "body_sha256": "301d87878603e6dd9e985265aae2de1685bf4c93d10864fab446b6a7131f5efe",
+      "request_id": "01M2MX3P6KFQGWNZA7W2D9KXKB",
+      "body": "{\"buyer_authority_granted\":false,\"certificate\":{\"payload\":{\"jurisdictions\":[\"protocol-structural-assessment-only\"],\"operations\":[\"INFORM\"],\"profile_hash\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"public_key\":\"MCowBQYDK2VwAyEAja/x5Ywa7B0DkdDdMRSyKxZJ/DDXZxN7SYemvVk/+is=\",\"roles\":[\"SOURCE\"],\"scopes\":[\"whp-standing-structured-passage\"],\"subject\":\"Wheeler Hubbell Publishing — attestations of WHP-controlled protocol identity records only\",\"valid_from\":1789514412,\"valid_until\":1821050442},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc\",\"type\":\"WHP-AUTHORITY-CERTIFICATE-v1\"},\"signature\":\"RWvGXLQf2BlB6pDozRdRBEkJthOMRnLmQwUV0H0In95yvCvpAtuXza22PisijJy/zrizzcDmRubmdMPYvkF8DQ==\"},\"limitation\":\"Only this actual signed WHP-controlled protocol record is supplied. A buyer must authenticate separately and cannot change the source record or infer external authority.\",\"permitted_operations\":[\"INFORM\"],\"root_pin\":\"e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc\",\"signed_record\":{\"payload\":{\"content\":{\"authorized_production_origin\":\"https://wheelerhubbellpublishingstandingmark.netlify.app\",\"contract_sha256\":\"dd433c055fe0ad0bdb0326479b3339eea018204ccef44cd6ef247520a29c8e75\",\"issuer\":\"Wheeler Hubbell Publishing\",\"kind\":\"WHP-CONTROLLED-PROTOCOL-IDENTITY-v1\",\"meaning\":\"This records WHP controlled protocol commitments, not service readiness or the truth of external claims.\",\"profile_sha256\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"verifier_sha256\":\"bb8cb78205f1892dcbf00d845cf85e504a0efacf2a0d8a793313fa8c0e99b833\"},\"epistemic_status\":\"REPORT\",\"id\":\"urn:whp:standing:controlled-production-contract\",\"jurisdiction\":\"protocol-structural-assessment-only\",\"locator\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/authority/source-admission.json\",\"operations\":[\"INFORM\"],\"prior_hash\":null,\"qualifiers\":[\"WHP-controlled protocol identity only; no external factual or legal authority.\",\"No service-readiness or payment observation is asserted.\"],\"scope\":\"whp-standing-structured-passage\",\"status\":\"ACTIVE\",\"unknowns\":[],\"valid_from\":1789514412,\"valid_until\":1821050442,\"version\":\"1\"},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"fa8b6153645e3f5d1d2207c108f7e0128b5eca932e405a142666840857d46aba\",\"type\":\"WHP-SOURCE-ATTESTATION-v1\"},\"signature\":\"fzc27rhgZdk0maE5wxw5kYHrDSAKgURyj8vuPi/BAmQbi+cygwBwg0WFV9BzaULaQPklfrib5AIUq4kuyfTyBw==\"},\"source_key_id\":\"fa8b6153645e3f5d1d2207c108f7e0128b5eca932e405a142666840857d46aba\",\"transition_authority_granted\":false,\"version\":\"WHP-BOUNDED-SOURCE-ADMISSION-v1\"}\n"
+    },
+    {
+      "at": "2026-09-16T10:44:57.517Z",
+      "method": "GET",
+      "path": "/v1/contract",
+      "status": 200,
+      "body_sha256": "52969e5cecbab4413f61fffb0f4828743cae30844fe3352aa01566bd969ba415",
+      "request_id": "01M2MX3PBH9QWZ4WQNBJNVH36Y",
+      "body": "{\"authentication\":{\"purchase\":\"NONE_BEYOND_X402_PAYMENT\",\"retrieval\":\"NONE\",\"review\":\"WHP-Client-Proof-v1 applies only to reviewer-authenticated review submissions; it is not required for purchase, 402 discovery, result retrieval or recovery.\"},\"authority_admission\":\"HTTPS proves control of an origin, not institutional appointment. A buyer must admit the publisher root under its own trust policy; unknown authority remains unknown.\",\"capability\":\"Machine-verifiable standing under explicit authority and bounds.\",\"capability_class\":\"urn:capability:machine-verifiable-standing:1\",\"capability_id\":\"urn:whp:standing:capability:1\",\"cold_probe\":{\"authority_established\":false,\"kind\":\"UNADMITTED_SELF_ATTESTATION\",\"purpose\":\"Inspect payment terms only. This probe cannot create source authority or positive standing.\",\"source_payload\":{\"content\":{\"$input\":\"object_content\"},\"epistemic_status\":\"REPORT\",\"id\":{\"$input\":\"object_id\"},\"jurisdiction\":{\"$input\":\"jurisdiction\"},\"locator\":\"urn:unadmitted:self-attestation\",\"operations\":[{\"$input\":\"operation\"}],\"prior_hash\":null,\"qualifiers\":[\"Unadmitted self-attestation for a boundary probe only.\"],\"scope\":{\"$input\":\"scope\"},\"status\":\"ACTIVE\",\"unknowns\":[{\"blocks\":[\"INFORM\",\"RECOMMEND\",\"EXECUTE\"],\"description\":\"No admitted source authority has been established for this probe.\",\"id\":\"authority-unestablished\"}],\"valid_from\":{\"$input\":\"now_minus_1\"},\"valid_until\":{\"$input\":\"now_plus_60\"},\"version\":{\"$input\":\"object_version\"}},\"source_protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"type\":\"WHP-SOURCE-ATTESTATION-v1\"},\"submission_template\":{\"bounds\":{\"jurisdiction\":{\"$input\":\"jurisdiction\"},\"scope\":{\"$input\":\"scope\"},\"valid_from\":{\"$input\":\"now_minus_1\"},\"valid_until\":{\"$input\":\"now_plus_60\"}},\"buyer_key\":{\"$input\":\"public_key\"},\"client_reference\":{\"$input\":\"client_reference\"},\"nodes\":[{\"$input\":\"signed_node\"}],\"object\":{\"id\":{\"$input\":\"object_id\"},\"root\":{\"$input\":\"node_hash\"},\"version\":{\"$input\":\"object_version\"}},\"profile\":{\"id\":\"WHP-STANDING-STRUCTURED-PASSAGE\",\"sha256\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"version\":\"1.0.0\"},\"requested_operation\":{\"$input\":\"operation\"},\"transitions\":[],\"version\":\"WHP-STANDING-SUBMISSION-v1\"},\"wallet_signing\":false},\"discovery_url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/whp-standing.json\",\"does_not_establish\":[\"Substantive truth of source assertions\",\"Authenticity of an external locator beyond the admitted signer's attestation\",\"Completeness of evidence outside the submitted graph\",\"General natural-language inference\",\"Execution or behavior of a submitted external workflow\",\"External legal or domain authority\",\"Legal compliance, safety or universal truth\",\"Continuity of versions outside the submitted graph\"],\"environment\":\"LIVE\",\"establishes\":\"Exact submitted signed JSON artifacts and COPY/COMPOSE transitions under admitted authority certificates. Relations assessed here are only the declared COPY and COMPOSE relations.\",\"external_registrations\":[],\"issuer\":\"Wheeler Hubbell Publishing\",\"mcp_url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/mcp\",\"payment\":{\"authorization_header\":\"PAYMENT-SIGNATURE\",\"generic_client_compatibility\":\"A generic random-nonce x402 client is not sufficient. The buyer must implement the published whp-standing exact-quote binding.\",\"nonce\":{\"algorithm\":\"SHA256-canonical-JSON\",\"domain\":\"WHP-STANDING-PURCHASE-BINDING-v1\",\"encoding\":\"0x-prefixed-32-bytes\",\"expression\":{\"domain\":\"WHP-STANDING-PURCHASE-BINDING-v1\",\"quote\":\"complete signed quote payload\"}},\"protocol\":\"x402-v2\",\"quote_pointer\":\"/extensions/whp-standing/info/quote\",\"required_extension\":\"whp-standing\",\"required_header\":\"PAYMENT-REQUIRED\",\"requirements_pointer\":\"/accepts/0\",\"settlement\":\"No issuance before exact canonical finalized Base transfer and AuthorizationUsed event. An uncertain settle remains pending; recover using the same stored authorization.\",\"settlement_header\":\"PAYMENT-RESPONSE\",\"wallet_authority\":\"The buyer client must independently enforce its owner-approved network, token, recipient, per-purchase and aggregate limits before its own wallet signs. The service never possesses buyer wallet keys.\"},\"profile\":{\"id\":\"WHP-STANDING-STRUCTURED-PASSAGE\",\"sha256\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/profiles/WHP-STANDING-STRUCTURED-PASSAGE/1.0.0\",\"version\":\"1.0.0\"},\"provider_discovery\":{\"interface\":\"capability-catalog-v1\",\"url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/provider-index.json\"},\"public_contract\":{\"document\":{\"artifact_types\":{\"negative\":\"WHP-STANDING-ASSESSMENT-v1\",\"negative_name\":\"WHP Standing Assessment v1\",\"positive\":\"WHP-STANDING-MARK-v1\",\"positive_name\":\"WHP Standing Mark v1\"},\"bootstrap\":{\"authority_pointer\":\"/payload/authority\",\"authorization_pointer\":\"/payload/profile_authorization\",\"authorization_type\":\"WHP-PROFILE-AUTHORIZATION-v1\",\"certificate_type\":\"WHP-AUTHORITY-CERTIFICATE-v1\",\"identity_pointer\":\"/payload/discovery\",\"profile_pointer\":\"/payload/profile\",\"purchase_id_pointer\":\"/payload/purchase_id\",\"registry_type\":\"WHP-REGISTRY-SNAPSHOT-v1\",\"resolution_arguments\":[\"{resolution}\",\"--resolution-only\",\"--contract\",\"{contract}\",\"--root-pin\",\"{root_pin}\"],\"resolution_role\":\"DISCOVERY\",\"resolution_type\":\"WHP-CAPABILITY-RESOLUTION-v1\",\"revocation_type\":\"WHP-KEY-REVOCATION-v1\",\"root_admission\":\"Embedded root self-consistency is not institutional authentication. TEST never establishes LIVE authority.\",\"test_arguments\":[\"--allow-test\"],\"trust_status_type\":\"WHP-TRUST-STATUS-v1\",\"verifier_arguments\":[\"{mark}\",\"--root-pin\",\"{root_pin}\",\"--registry\",\"{registry}\",\"--resolution\",\"{resolution}\"]},\"canonicalization\":{\"array_order\":\"PRESERVED\",\"duplicate_keys\":\"REJECT\",\"encoding\":\"UTF-8\",\"id\":\"WHP-JCS-I1\",\"key_order\":\"UTF16_CODE_UNITS\",\"max_depth\":64,\"numbers\":\"SAFE_INTEGER_TOKENS_ONLY_NO_NEGATIVE_ZERO\",\"unicode_normalization\":\"NONE\",\"unknown_semantic_fields\":\"REJECT\"},\"discovery_rule\":\"An immutable capability/resolution identity locates a separately signed current service. Current service metadata never rewrites historical meaning.\",\"envelope\":{\"algorithm\":\"Ed25519\",\"fields\":[\"protected\",\"payload\",\"signature\"],\"key_id\":\"SHA256-SPKI-DER\",\"protected_fields\":[\"type\",\"algorithm\",\"canonicalization\",\"key_id\"],\"signed_fields\":[\"protected\",\"payload\"]},\"id\":\"urn:whp:standing:mark-contract:1\",\"meaning\":{\"artifact_id\":\"/payload/mark_id\",\"authority\":\"/payload/authority\",\"bounds\":\"/payload/submission/bounds\",\"components\":\"/payload/decision_record/components\",\"determination\":\"/payload/decision_record/outcome\",\"does_not_establish\":\"/payload/limitations\",\"effective_at\":\"/payload/effective_at\",\"establishes\":\"/payload/decision_record/assessment_boundary\",\"expires_at\":\"/payload/expires_at\",\"issued_at\":\"/payload/issued_at\",\"issuer\":\"/payload/issuer\",\"object\":\"/payload/object\",\"operation\":\"/payload/submission/requested_operation\",\"provenance\":\"/payload/submission\",\"qualifications\":\"/payload/submission/nodes\",\"unknowns\":\"/payload/decision_record/unknowns\"},\"profile\":{\"id\":\"WHP-STANDING-STRUCTURED-PASSAGE\",\"sha256\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"version\":\"1.0.0\"},\"public_version\":\"1\",\"result_version\":\"WHP-STANDING-RESULT-v1\",\"schema_sha256\":\"17a18f8d7400f010aa02d5e26946b8ae282b00667f5a1ad4d664465042311a54\",\"status_rule\":\"Historical issuance verification never implies current standing. A fresh independent signed registry check is required.\"},\"sha256\":\"dd433c055fe0ad0bdb0326479b3339eea018204ccef44cd6ef247520a29c8e75\",\"verifier_sha256\":\"bb8cb78205f1892dcbf00d845cf85e504a0efacf2a0d8a793313fa8c0e99b833\"},\"publisher\":\"Wheeler Hubbell Publishing\",\"purchase\":{\"access_sequence\":[\"SUBMIT_VALID_REQUEST\",\"HTTP_402\",\"X402_PAYMENT\",\"RESULT_OR_PENDING\"],\"charge_policy\":\"One evaluation, including a negative assessment. A failed assessment never receives a WHP Standing Mark. Retrieval and recovery never authorize a second payment.\",\"content_type\":\"application/json\",\"input_schema\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/schemas/submission.schema.json\",\"input_schema_sha256\":\"0f98c4085ca39706e43c7f6bda40b7dab4b187907f01ff0d32f20785e0f416ab\",\"method\":\"POST\",\"name\":\"WHP Standing Evaluation\",\"prerequisites\":\"SOURCE and TRANSITION attestations must chain to admitted authorities with the exact scope, jurisdiction, time and operation. Paying does not supply missing authority.\",\"requirements\":{\"amount\":\"1000000\",\"asset\":\"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913\",\"extra\":{\"assetTransferMethod\":\"eip3009\",\"name\":\"USD Coin\",\"paymentFlow\":\"authorization\",\"version\":\"2\"},\"maxTimeoutSeconds\":300,\"network\":\"eip155:8453\",\"payTo\":\"0x1050eddd8282623b0c263ed6bdbd42370bbc28d3\",\"scheme\":\"exact\"},\"result_schema\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/schemas/result.schema.json\",\"url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/evaluations\",\"whp_buyer_signature_required\":false},\"registration_claim\":\"No registration is claimed by serving this contract.\",\"retrieval\":{\"additional_charge\":false,\"identity\":\"Root pin + buyer Ed25519 key + client_reference; exact submitted-object hash is immutable.\",\"lost_response\":\"Use GET result or empty POST recovery with the durable purchase ID. Do not generate a second wallet authorization.\"},\"root_pin\":\"e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc\",\"service\":\"WHP Standing\",\"supported_jurisdictions\":[\"protocol-structural-assessment-only\"],\"supported_properties\":[\"explicit-authority\",\"explicit-bounds\",\"provenance-integrity\",\"qualification-preservation\",\"unknown-preservation\",\"independent-verification\",\"durable-evidence\"],\"supported_scopes\":[\"whp-standing-structured-passage\"],\"verification_url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/verification\",\"version\":\"WHP-STANDING-CONTRACT-v1\"}\n"
+    },
+    {
+      "at": "2026-09-16T10:44:57.721Z",
+      "method": "POST",
+      "path": "/v1/evaluations",
+      "status": 503,
+      "body_sha256": "04e250a17b0e28fcdf7fc625840325513cec2e32f7bd77c468337e1ba78775fb",
+      "request_id": "01M2MX3PHM8SXKTC9522TGEF0B",
+      "body": "{\"error\":{\"code\":\"SERVICE_UNAVAILABLE\"}}"
+    },
+    {
+      "at": "2026-09-16T10:45:02.205Z",
+      "method": "POST",
+      "path": "/v1/evaluations",
+      "status": 503,
+      "body_sha256": "04e250a17b0e28fcdf7fc625840325513cec2e32f7bd77c468337e1ba78775fb",
+      "request_id": "01M2MX3THBZCJY963XSZEXNXVT",
+      "body": "{\"error\":{\"code\":\"SERVICE_UNAVAILABLE\"}}"
+    },
+    {
+      "at": "2026-09-16T10:45:06.368Z",
+      "method": "POST",
+      "path": "/v1/evaluations",
+      "status": 503,
+      "body_sha256": "04e250a17b0e28fcdf7fc625840325513cec2e32f7bd77c468337e1ba78775fb",
+      "request_id": "01M2MX3YX03B4AK8W1W6Y49GKA",
+      "body": "{\"error\":{\"code\":\"SERVICE_UNAVAILABLE\"}}"
+    },
+    {
+      "at": "2026-09-16T10:45:11.049Z",
+      "method": "POST",
+      "path": "/v1/evaluations",
+      "status": 503,
+      "body_sha256": "04e250a17b0e28fcdf7fc625840325513cec2e32f7bd77c468337e1ba78775fb",
+      "request_id": "01M2MX43GK43R03P7D7FJVWBA6",
+      "body": "{\"error\":{\"code\":\"SERVICE_UNAVAILABLE\"}}"
+    },
+    {
+      "at": "2026-09-16T10:45:16.065Z",
+      "method": "POST",
+      "path": "/v1/evaluations",
+      "status": 402,
+      "body_sha256": "0fbdbb46919dfdec61db52fe770e2082678649a9bb57aba9ff6d7c2f7ac6c0c8",
+      "request_id": "01M2MX47JWRSY67AVKTG3SX6G2",
+      "body": "{\"accepts\":[{\"amount\":\"1000000\",\"asset\":\"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913\",\"extra\":{\"assetTransferMethod\":\"eip3009\",\"name\":\"USD Coin\",\"paymentFlow\":\"authorization\",\"version\":\"2\"},\"maxTimeoutSeconds\":300,\"network\":\"eip155:8453\",\"payTo\":\"0x1050eddd8282623b0c263ed6bdbd42370bbc28d3\",\"scheme\":\"exact\"}],\"extensions\":{\"bazaar\":{\"info\":{\"input\":{\"body\":{\"bounds\":{\"jurisdiction\":\"test-fixture-not-external-authority\",\"scope\":\"submitted-example-only\",\"valid_from\":1789461990,\"valid_until\":1789465690},\"buyer_key\":\"MCowBQYDK2VwAyEAiFGW7CzLVQtiWUdA3AkabG+KuuQ1saPdwSDTGykJKsY=\",\"client_reference\":\"test-75b338dd8640d75b06913abcfd8858ab\",\"nodes\":[{\"payload\":{\"content\":{\"count\":3,\"statement\":\"Three items are present in this submitted fixture.\"},\"epistemic_status\":\"REPORT\",\"id\":\"sample-observation\",\"jurisdiction\":\"test-fixture-not-external-authority\",\"locator\":\"urn:whp:test:source-1\",\"operations\":[\"INFORM\",\"RECOMMEND\"],\"prior_hash\":null,\"qualifiers\":[\"Only this submitted fixture.\",\"No external-world truth claim.\"],\"scope\":\"submitted-example-only\",\"status\":\"ACTIVE\",\"unknowns\":[{\"blocks\":[\"EXECUTE\"],\"description\":\"No outside-world evidence is supplied.\",\"id\":\"external-validity\"}],\"valid_from\":1789461590,\"valid_until\":1789469290,\"version\":\"1\"},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"45459cb09fd25c1780246543b9c49dc7cdbae9e511e043541771b4549d265f8e\",\"type\":\"WHP-SOURCE-ATTESTATION-v1\"},\"signature\":\"RqEsYBc5k1fOOCM1drKWxetUu4BDk7S/CsHyomyV6ShYAyy8E84qE0ZocL7UUszE2dQfb5HwkI6mcy87w3baCA==\"},{\"payload\":{\"content\":{\"count\":3,\"statement\":\"Three items are present in this submitted fixture.\"},\"epistemic_status\":\"REPORT\",\"id\":\"preserved-representation\",\"jurisdiction\":\"test-fixture-not-external-authority\",\"locator\":\"urn:whp:test:representation-1\",\"operations\":[\"INFORM\",\"RECOMMEND\"],\"prior_hash\":null,\"qualifiers\":[\"Only this submitted fixture.\",\"No external-world truth claim.\"],\"scope\":\"submitted-example-only\",\"status\":\"ACTIVE\",\"unknowns\":[{\"blocks\":[\"EXECUTE\"],\"description\":\"No outside-world evidence is supplied.\",\"id\":\"external-validity\"}],\"valid_from\":1789461590,\"valid_until\":1789469290,\"version\":\"1\"},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"45459cb09fd25c1780246543b9c49dc7cdbae9e511e043541771b4549d265f8e\",\"type\":\"WHP-SOURCE-ATTESTATION-v1\"},\"signature\":\"qHWKrTkD6zetYI5+tnbO7F5C9kZvZxosmSBcPShQe/qdSX19s72s+8uljoPBSz+/pc7Kk7eYO2rDVpqJcs1DAA==\"}],\"object\":{\"id\":\"preserved-representation\",\"root\":\"9f76fe2e3ccc2260d7f3432678f3666137f55312bfbbc8d1e55ecb0b72c0401b\",\"version\":\"1\"},\"profile\":{\"id\":\"WHP-STANDING-STRUCTURED-PASSAGE\",\"sha256\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"version\":\"1.0.0\"},\"requested_operation\":\"INFORM\",\"transitions\":[{\"payload\":{\"from\":[\"67677c7a07e0c626a20cf9e891f1f64494c71ca0fc771a729e9cc26bebe8a41d\"],\"jurisdiction\":\"test-fixture-not-external-authority\",\"operations\":[\"INFORM\",\"RECOMMEND\"],\"scope\":\"submitted-example-only\",\"to\":\"9f76fe2e3ccc2260d7f3432678f3666137f55312bfbbc8d1e55ecb0b72c0401b\",\"transform\":\"COPY\",\"valid_from\":1789461590,\"valid_until\":1789469290,\"warrant\":{\"evidence_hashes\":[\"67677c7a07e0c626a20cf9e891f1f64494c71ca0fc771a729e9cc26bebe8a41d\"],\"statement\":\"Exact COPY of this source for INFORM or RECOMMEND only; all qualifiers and unknowns retained.\"}},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"6bcaba2897b7e9f517dce43d83c1b872df2be42319b07b9af13e861791ad6d50\",\"type\":\"WHP-TRANSITION-WARRANT-v1\"},\"signature\":\"H4PlHUdLluqAXjtPxxQWQ/7PQu1o7R/eppBh1pHcA43V3+NC2e8gt0suC3ZR97jb0oaIuTAzBWczrZakFgDLBA==\"}],\"version\":\"WHP-STANDING-SUBMISSION-v1\"},\"bodyType\":\"json\",\"headers\":{},\"method\":\"POST\",\"type\":\"http\"},\"output\":{\"type\":\"json\"}},\"schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"properties\":{\"input\":{\"additionalProperties\":false,\"properties\":{\"body\":{\"$ref\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/schemas/submission.schema.json\",\"description\":\"TEST wire-shape example only. A LIVE evaluation requires currently admitted SOURCE and TRANSITION attestations. The complete purchase and authentication contract is https://wheelerhubbellpublishingstandingmark.netlify.app/v1/contract\"},\"bodyType\":{\"enum\":[\"json\"],\"type\":\"string\"},\"headers\":{\"additionalProperties\":{\"type\":\"string\"},\"type\":\"object\"},\"method\":{\"enum\":[\"POST\"],\"type\":\"string\"},\"type\":{\"const\":\"http\",\"type\":\"string\"}},\"required\":[\"type\",\"method\",\"bodyType\",\"body\"],\"type\":\"object\"},\"output\":{\"additionalProperties\":false,\"properties\":{\"type\":{\"const\":\"json\",\"type\":\"string\"}},\"required\":[\"type\"],\"type\":\"object\"}},\"required\":[\"input\"],\"type\":\"object\"}},\"whp-standing\":{\"info\":{\"quote\":{\"payload\":{\"buyer_key\":\"MCowBQYDK2VwAyEAiFGW7CzLVQtiWUdA3AkabG+KuuQ1saPdwSDTGykJKsY=\",\"charge_policy\":\"One evaluation, regardless of outcome. No second charge for this purchase identity.\",\"environment\":\"LIVE\",\"expires_at\":1789556115,\"issued_at\":1789555515,\"issuer\":\"Wheeler Hubbell Publishing\",\"payment_requirements\":{\"amount\":\"1000000\",\"asset\":\"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913\",\"extra\":{\"assetTransferMethod\":\"eip3009\",\"name\":\"USD Coin\",\"paymentFlow\":\"authorization\",\"version\":\"2\"},\"maxTimeoutSeconds\":300,\"network\":\"eip155:8453\",\"payTo\":\"0x1050eddd8282623b0c263ed6bdbd42370bbc28d3\",\"scheme\":\"exact\"},\"profile_hash\":\"4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab\",\"purchase_id\":\"b47a3d86397e2b41c3efe0785025ecfa0ddd511f6bdf680a1feda6c1ab011817\",\"request_hash\":\"a9fcd5750857a87d4f013180130c9a7a22af540b43073da587b22cdda1feef9a\",\"resource\":{\"description\":\"One bounded WHP Standing evaluation and durable retrieval\",\"mimeType\":\"application/json\",\"url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/evaluations\"}},\"protected\":{\"algorithm\":\"Ed25519\",\"canonicalization\":\"WHP-JCS-I1\",\"key_id\":\"8d65f5a4057eedb76ac3db83e9217a374c0072adfa3986b4745e4b5b5bbb22e8\",\"type\":\"WHP-STANDING-QUOTE-v1\"},\"signature\":\"3pM/3Yz1ruvZko/jwwhZO2NDtULEoth9efB8u0JJZZvNPQTl6f8TPjMmqRy8cNneuk3pOiSIcUMhJV5+rzqfCQ==\"},\"required\":true},\"schema\":{\"type\":\"object\"}}},\"resource\":{\"description\":\"One bounded WHP Standing evaluation and durable retrieval\",\"mimeType\":\"application/json\",\"url\":\"https://wheelerhubbellpublishingstandingmark.netlify.app/v1/evaluations\"},\"x402Version\":2}\n"
+    }
+  ]
+}

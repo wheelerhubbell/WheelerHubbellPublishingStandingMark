@@ -1,0 +1,43 @@
+{
+  "retrieved_at": "2026-09-16T10:48:24.110Z",
+  "source": "Netlify read-only deploy API",
+  "id": "6aaa66003416ab6db93b8058",
+  "site_id": "813ee022-f4d9-4d8e-a974-86158583a39f",
+  "ssl_url": "https://wheelerhubbellpublishingstandingmark.netlify.app",
+  "state": "ready",
+  "branch": "main",
+  "created_at": "2026-09-16T09:48:48.087Z",
+  "published_at": "2026-09-16T09:48:58.443Z",
+  "commit_ref": null,
+  "deploy_source": "cli",
+  "functions": [
+    {
+      "name": "standing",
+      "sha256": "f7815fdfdf52262c32021a1b20f068f4124ce51054efdb111e8725e39344c885",
+      "runtime": "nodejs24.x",
+      "paths": [
+        "/",
+        "/v1/*",
+        "/.well-known/whp-standing.json",
+        "/.well-known/standing-capability.json",
+        "/.well-known/agent-card.json",
+        "/.well-known/agent.json",
+        "/.well-known/x402",
+        "/openapi.json",
+        "/discovery/*",
+        "/verification/*",
+        "/examples/*",
+        "/.well-known/api-catalog",
+        "/healthz",
+        "/schemas/*",
+        "/a2a",
+        "/mcp",
+        "/server.json",
+        "/robots.txt",
+        "/sitemap.xml",
+        "/llms.txt"
+      ]
+    }
+  ],
+  "interpretation": "Deployment identity observed; no Git commit linkage was supplied by Netlify. Public response evidence is separate from recovered main."
+}

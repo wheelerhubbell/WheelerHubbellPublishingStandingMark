@@ -2,6 +2,8 @@ import { demand, openSeal, keyId, keyObject, exact, timeWindow, array, text, has
 import { PROFILE_HASH } from './profile.mjs';
 import { CONTRACT_HASH, VERIFIER_HASH } from './protocol.mjs';
 
+import {scoped,namespaceAuthorize,attachNamespaceEvidence} from './namespace-authority.mjs';
+
 // Trust is supplied out of band. Embedded certificates never appoint their own root.
 export function validateTrust(bundle, pinnedRoot, at) {
   demand(Buffer.byteLength(canonical(bundle))<=65536,'TRUST_BUNDLE_TOO_LARGE',503);
@@ -31,10 +33,10 @@ export function validateTrust(bundle, pinnedRoot, at) {
   return {keys,revocations,profile:pa,bundle,pinnedRoot,at};
 }
 export function authorize(e,type,role,context,trust) {
-  const c=trust.keys.get(e.protected.key_id);demand(c,'UNKNOWN_AUTHORITY');
+  const c=trust.keys.get(e.protected.key_id);if(!c)return namespaceAuthorize(e,type,role,context,trust);
   const p=openSeal(e,type,c.public_key);
   demand(c.roles.includes(role),'ROLE_NOT_AUTHORIZED');
-  demand(c.scopes.includes(context.scope) && c.jurisdictions.includes(context.jurisdiction),'AUTHORITY_OUT_OF_BOUNDS');
+  demand(scoped(c,context.scope,context.jurisdiction,role),'AUTHORITY_OUT_OF_BOUNDS');
   demand(c.valid_from<=trust.at && trust.at<c.valid_until,'AUTHORITY_EXPIRED');
   demand(!trust.revocations.some(r=>r.key_id===e.protected.key_id && r.effective_at<=trust.at),'AUTHORITY_REVOKED');
   demand((context.operations??[]).every(o=>c.operations.includes(o)),'AUTHORITY_OPERATION_DENIED');
@@ -42,15 +44,16 @@ export function authorize(e,type,role,context,trust) {
 }
 export function issuerAuthority(key,scope,jurisdiction,trust) {
   const c=trust.keys.get(key);demand(c && c.roles.includes('ISSUER'),'ISSUING_AUTHORITY_MISSING',503);
-  demand(c.scopes.includes(scope) && c.jurisdictions.includes(jurisdiction),'ISSUER_OUT_OF_BOUNDS',503);
+  demand(scoped(c,scope,jurisdiction,'ISSUER'),'ISSUER_OUT_OF_BOUNDS',503);
   demand(c.valid_from<=trust.at && trust.at<c.valid_until && !trust.revocations.some(r=>r.key_id===key && r.effective_at<=trust.at),'ISSUING_AUTHORITY_INVALID',503);
   return c;
 }
 
 // Current-status evaluation is deliberately distinct from historical issuance proof.
-export function liveAuthorityIntact(result,trust){
+export function liveAuthorityIntact(result,trust,authorityEvidence){
   const p=result.payload,s=p.submission;
   try{
+    trust=attachNamespaceEvidence(trust,s,authorityEvidence);
     issuerAuthority(p.issuer_key_id,s.bounds.scope,s.bounds.jurisdiction,trust);
     for(const e of s.nodes)authorize(e,'WHP-SOURCE-ATTESTATION-v1','SOURCE',{...s.bounds,operations:e.payload.operations},trust);
     for(const e of s.transitions)authorize(e,'WHP-TRANSITION-WARRANT-v1','TRANSITION',{...s.bounds,operations:e.payload.operations},trust);

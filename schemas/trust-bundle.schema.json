@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:whp:standing:v1:trust-bundle",
-  "title": "WHP Standing v1 trust-bundle",
+  "$id": "urn:whp:standing:v1.1:trust-bundle",
+  "title": "WHP Standing v1.1 trust-bundle",
   "$defs": {
     "profile_authorization": {
       "type": "object",
@@ -35,7 +35,7 @@
           "type": "object",
           "properties": {
             "profile_hash": {
-              "const": "4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab"
+              "const": "d6296b9ea7a2c570c2c0ae98af8385d6f8edee1e869fb0ae9f553c90302303a7"
             },
             "contract_hash": {
               "type": "string",
@@ -183,7 +183,7 @@
               "uniqueItems": true
             },
             "profile_hash": {
-              "const": "4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab"
+              "const": "d6296b9ea7a2c570c2c0ae98af8385d6f8edee1e869fb0ae9f553c90302303a7"
             },
             "valid_from": {
               "type": "integer",

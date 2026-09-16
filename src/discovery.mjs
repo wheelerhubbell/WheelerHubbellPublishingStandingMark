@@ -49,7 +49,7 @@ export function unadmittedProbe(){
     source_payload:{id:input('object_id'),version:input('object_version'),content:input('object_content'),locator:'urn:unadmitted:self-attestation',epistemic_status:'REPORT',
       qualifiers:['Unadmitted self-attestation for a boundary probe only.'],unknowns:[{id:'authority-unestablished',description:'No admitted source authority has been established for this probe.',blocks:['INFORM','RECOMMEND','EXECUTE']}],
       operations:[input('operation')],...bounds,status:'ACTIVE',prior_hash:null},
-    submission_template:{version:'WHP-STANDING-SUBMISSION-v1',client_reference:input('client_reference'),buyer_key:input('public_key'),profile:{id:PROFILE_ID,version:PROFILE_VERSION,sha256:PROFILE_HASH},
+    submission_template:{version:'WHP-STANDING-SUBMISSION-v1.1',client_reference:input('client_reference'),authority:[],profile:{id:PROFILE_ID,version:PROFILE_VERSION,sha256:PROFILE_HASH},
       object:{id:input('object_id'),version:input('object_version'),root:input('node_hash')},bounds,requested_operation:input('operation'),nodes:[input('signed_node')],transitions:[]}};
 }
 export function verificationDocument(origin){return {
@@ -63,7 +63,7 @@ export function verificationDocument(origin){return {
   settlement:'Use --rpc with an independently trusted HTTPS Base RPC to recheck finality and exact transfer. An RPC URL is not supplied by the Mark as an unquestionable oracle.'
 };}
 export function contract(service){const o=service.origin;return {
-  version:'WHP-STANDING-CONTRACT-v1',service:SERVICE,capability:CAPABILITY,capability_id:CAPABILITY_ID,capability_class:CAPABILITY_CLASS,publisher:PUBLISHER,
+  version:'WHP-STANDING-CONTRACT-v1.1',service:SERVICE,capability:CAPABILITY,capability_id:CAPABILITY_ID,capability_class:CAPABILITY_CLASS,publisher:PUBLISHER,
   issuer:service.trustBundle.profile_authorization.payload.issuer,public_contract:protocol(),root_pin:service.rootPin,
   supported_properties:STANDING_CAPABILITY.requirements,
   supported_scopes:service.trustBundle.certificates.find(e=>hashBytes(Buffer.from(e.payload.public_key,'base64'))===service.keyId).payload.scopes,
@@ -73,16 +73,14 @@ export function contract(service){const o=service.origin;return {
   purchase:{name:'WHP Standing Evaluation',method:'POST',url:o+'/v1/evaluations',content_type:'application/json',input_schema:o+'/schemas/submission.schema.json',input_schema_sha256:hash(inputSchema),result_schema:o+'/schemas/result.schema.json',
     requirements:service.requirements,charge_policy:'One evaluation, including a negative assessment. A failed assessment never receives a WHP Standing Mark. Retrieval and recovery never authorize a second payment.',
     prerequisites:'SOURCE and TRANSITION attestations must chain to admitted authorities with the exact scope, jurisdiction, time and operation. Paying does not supply missing authority.'},
-  authentication:{header:'whp-client-proof',encoding:'base64-JSON',key_algorithm:'Ed25519',key_encoding:'base64-DER-SPKI',canonicalization:'WHP-JCS-I1',
-    protected:{type:'WHP-CLIENT-PROOF-v1',algorithm:'Ed25519',canonicalization:'WHP-JCS-I1'},key_id:'SHA256-SPKI-DER',signed_fields:['protected','payload'],
-    payload_fields:{method:'HTTP-method',path:'URL-path-and-query',body_hash:'SHA256-exact-request-bytes',issued_at:'Unix-seconds',expires_at:'Unix-seconds-plus-120',nonce:'random-16-byte-hex'}},
-  payment:{protocol:'x402-v2',required_header:'PAYMENT-REQUIRED',authorization_header:'PAYMENT-SIGNATURE',settlement_header:'PAYMENT-RESPONSE',required_extension:'whp-standing',
+  authentication:{purchase:'NONE_BEYOND_X402_PAYMENT',retrieval:'OPAQUE_PURCHASE_CAPABILITY',review:'Reviewer signatures apply only to review submissions.'},
+  payment:{protocol:'x402-v2',required_header:'PAYMENT-REQUIRED',authorization_header:'PAYMENT-SIGNATURE',settlement_header:'PAYMENT-RESPONSE',required_extension:null,
     quote_pointer:'/extensions/whp-standing/info/quote',requirements_pointer:'/accepts/0',
-    nonce:{algorithm:'SHA256-canonical-JSON',domain:'WHP-STANDING-PURCHASE-BINDING-v1',expression:{domain:'WHP-STANDING-PURCHASE-BINDING-v1',quote:'complete signed quote payload'},encoding:'0x-prefixed-32-bytes'},
+    nonce:{source:'CLIENT_SELECTED_EIP3009_NONCE'},
     wallet_authority:'The buyer client must independently enforce its owner-approved network, token, recipient, per-purchase and aggregate limits before its own wallet signs. The service never possesses buyer wallet keys.',
-    generic_client_compatibility:'A generic random-nonce x402 client is not sufficient. The buyer must implement the published whp-standing exact-quote binding.',
+    generic_client_compatibility:'Standard x402 v2 exact EIP-3009 clients, including client-selected random nonces. No WHP-specific client extension is required.',
     settlement:'No issuance before exact canonical finalized Base transfer and AuthorizationUsed event. An uncertain settle remains pending; recover using the same stored authorization.'},
-  retrieval:{additional_charge:false,identity:'Root pin + buyer Ed25519 key + client_reference; exact submitted-object hash is immutable.',lost_response:'Use authenticated GET result or authenticated empty POST recovery. Do not generate a second wallet authorization.'},
+  retrieval:{additional_charge:false,identity:'Root pin + cryptographically random 256-bit client_reference; exact submitted-object hash is immutable.',lost_response:'Use GET result or empty POST recovery with the opaque purchase capability. Do not generate a second wallet authorization.'},
   cold_probe:unadmittedProbe(),
   provider_discovery:{interface:'capability-catalog-v1',url:service.catalogUrl??null},
   verification_url:o+'/v1/verification',discovery_url:o+'/.well-known/whp-standing.json',mcp_url:o+'/mcp',
@@ -95,7 +93,7 @@ export function contract(service){const o=service.origin;return {
 // External catalog acceptance of remote $ref resolution remains separately evidenced.
 export function bazaar(service){return {
   info:{input:{type:'http',method:'POST',bodyType:'json',body:publicExample,
-    headers:{'whp-client-proof':'See '+service.origin+'/v1/contract for a fresh Ed25519 HTTP proof; this is not a wallet key.'}},output:{type:'json'}},
+    headers:{}},output:{type:'json'}},
   schema:{$schema:'https://json-schema.org/draft/2020-12/schema',type:'object',properties:{
     input:{type:'object',properties:{type:{type:'string',const:'http'},method:{type:'string',enum:['POST']},bodyType:{type:'string',enum:['json']},
       body:{$ref:service.origin+'/schemas/submission.schema.json',description:'TEST wire-shape example only. A LIVE evaluation requires currently admitted SOURCE and TRANSITION attestations. The complete purchase and authentication contract is '+service.origin+'/v1/contract'},
@@ -106,7 +104,7 @@ const response=(body,type='application/json',method='GET',extra={})=>new Respons
 export async function discoveryRoute(service,req){const o=service.origin,u=new URL(req.url),p=u.pathname;if(!['GET','HEAD'].includes(req.method))return null;
   if(p==='/openapi.json')return response(currentOpenapi(service),'application/json',req.method);
   if(p==='/.well-known/agent-card.json'||p==='/.well-known/agent.json')return response(agentCard(o),'application/json',req.method);
-  if(p==='/.well-known/x402')return response({version:1,resources:[o+'/v1/evaluations'],name:SERVICE,description:CAPABILITY,homepage:o,repository:'https://github.com/wheelerhubbell/WheelerHubbellPublishingStandingMark',machineReadable:{openapi:o+'/v1/openapi.json',contract:o+'/v1/contract',llmsTxt:o+'/llms.txt',applicability:o+'/discovery/applicability.json'},mcp:{remoteConnector:o+'/mcp'},payment:{protocol:'x402-v2',requirements:service.requirements,required_extension:'whp-standing',generic_random_nonce_client_compatible:false,prerequisites_url:o+'/v1/contract'},registration_claim:'Self-published discovery only; external acceptance is separately evidenced.'},'application/json',req.method);
+  if(p==='/.well-known/x402')return response({version:1,resources:[o+'/v1/evaluations'],name:SERVICE,description:CAPABILITY,homepage:o,repository:'https://github.com/wheelerhubbell/WheelerHubbellPublishingStandingMark',machineReadable:{openapi:o+'/v1/openapi.json',contract:o+'/v1/contract',llmsTxt:o+'/llms.txt',applicability:o+'/discovery/applicability.json'},mcp:{remoteConnector:o+'/mcp'},payment:{protocol:'x402-v2',requirements:service.requirements,required_extension:null,generic_random_nonce_client_compatible:true,prerequisites_url:o+'/v1/contract'},registration_claim:'Self-published discovery only; external acceptance is separately evidenced.'},'application/json',req.method);
   if(p==='/discovery/applicability.json')return response(applicability(o),'application/json',req.method);
   if(p==='/discovery/recursive-use.json')return response(recursiveUse(o),'application/json',req.method);
   if(p==='/v1/profiles')return response({profiles:[{id:PROFILE_ID,version:PROFILE_VERSION,sha256:PROFILE_HASH,url:o+profilePath}]},'application/json',req.method);
@@ -116,7 +114,7 @@ export async function discoveryRoute(service,req){const o=service.origin,u=new U
   if(p==='/v1/contracts/mark-v1.json')return response(protocol().document,'application/json',req.method);
   if(p==='/schemas/discovery-resolution.schema.json')return response(resolutionSchema,'application/schema+json',req.method);
   const immutable=p.match(/^\/v1\/immutable\/([0-9a-f]{64})$/);
-  if(immutable){const objects=new Map([[PROFILE_HASH,profile()],[CONTRACT_HASH,protocol().document],[SCHEMA_HASH,resultSchema]]);const value=objects.get(immutable[1]);return value?response(value,'application/json',req.method,{'cache-control':'public, max-age=31536000, immutable'}):new Response(null,{status:404});}
+  if(immutable){const objects=new Map([[PROFILE_HASH,profile()],[CONTRACT_HASH,protocol().document],[SCHEMA_HASH,resultSchema]]);let value=objects.get(immutable[1]);if(!value){try{value=JSON.parse(await readFile(resolve(process.cwd(),'public/immutable',immutable[1]+'.json'),'utf8'));demand(hash(value)===immutable[1],'IMMUTABLE_HASH_MISMATCH',503);}catch(e){if(e.code!=='ENOENT')throw e;}}return value?response(value,'application/json',req.method,{'cache-control':'public, max-age=31536000, immutable'}):new Response(null,{status:404});}
   const link='<'+o+'/.well-known/api-catalog>; rel="api-catalog"';
   if(p==='/examples/submission.TEST.json')return response(publicExample,'application/json',req.method);
   if(p==='/v1/contract')return response(contract(service),'application/json',req.method);
