@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   repair:
-    if: github.event.head_commit.message == 'repair: remove WHP buyer proof from acquisition boundary'
+    if: github.event.head_commit.message != 'fix: direct machine acquisition to x402 without WHP buyer proof'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,8 +19,9 @@ jobs:
           fetch-depth: 0
 
       - name: Apply exact live-interface correction
-        shell: python
+        shell: bash
         run: |
+          python - <<'PY'
           from pathlib import Path
           import json
 
@@ -32,12 +33,10 @@ jobs:
                   raise SystemExit(f'expected exactly one source fragment: {path}: count={s.count(old)}')
               p.write_text(s.replace(old,new))
 
-          # The acquisition request is structurally validated, then goes directly to quote/402.
           replace_exact('src/service.mjs',
             "const raw=await readBody(req),s=validateSubmission(parseStrict(raw));authenticate(req,s.buyer_key,raw,now);\n      // Pure structural validation, client authentication and issuer authority precede all storage/payment calls.",
             "const raw=await readBody(req),s=validateSubmission(parseStrict(raw));\n      // Pure structural validation and issuer authority precede all storage/payment calls. No WHP-specific buyer signature is required to reach the x402 boundary.")
 
-          # Durable result/recovery is possession-of-purchase-id, not a second signing ceremony.
           replace_exact('src/service.mjs',
             "const row=await this.store.get(purchase[1]);demand(row,'PURCHASE_NOT_FOUND',404);authenticate(req,row.buyer_key,'',now);\n      if(row.state==='ISSUED')return result(row.result_bytes);",
             "const row=await this.store.get(purchase[1]);demand(row,'PURCHASE_NOT_FOUND',404);\n      if(row.state==='ISSUED')return result(row.result_bytes);")
@@ -45,7 +44,6 @@ jobs:
             "const raw=await readBody(req);demand(raw==='','RECOVERY_BODY_MUST_BE_EMPTY');const row=await this.store.get(recover[1]);demand(row,'PURCHASE_NOT_FOUND',404);authenticate(req,row.buyer_key,'',now);demand(row.state!=='QUOTED','PAYMENT_NOT_AUTHORIZED',409);return this.progress(row);",
             "const raw=await readBody(req);demand(raw==='','RECOVERY_BODY_MUST_BE_EMPTY');const row=await this.store.get(recover[1]);demand(row,'PURCHASE_NOT_FOUND',404);demand(row.state!=='QUOTED','PAYMENT_NOT_AUTHORIZED',409);return this.progress(row);")
 
-          # The first-party buyer must exercise the same public no-WHP-proof path.
           replace_exact('src/buyer.mjs',
             "import {clientProof,purchaseId} from './service.mjs';",
             "import {purchaseId} from './service.mjs';")
@@ -53,7 +51,6 @@ jobs:
             "async request(method,path,body='',payment=null){const headers={'content-type':'application/json','whp-client-proof':clientProof(this.privateKey,method,path,body,this.clock())};if(payment)headers['payment-signature']=encode(payment);",
             "async request(method,path,body='',payment=null){const headers={'content-type':'application/json'};if(payment)headers['payment-signature']=encode(payment);")
 
-          # Current service discovery must describe the actual low-friction interface.
           p=Path('src/discovery.mjs'); s=p.read_text()
           start=s.index("  authentication:{header:'whp-client-proof'")
           end=s.index("  payment:{protocol:'x402-v2'", start)
@@ -70,7 +67,6 @@ jobs:
                       "The complete purchase and payment contract is '+service.origin+'/v1/contract")
           p.write_text(s)
 
-          # OpenAPI: ClientProof remains scoped only to review; acquisition/retrieval have no WHP auth gate.
           p=Path('public/openapi.json'); api=json.loads(p.read_text())
           for route,method in [('/v1/evaluations','post'),('/v1/purchases/{purchase_id}/result','get'),('/v1/purchases/{purchase_id}/recover','post')]:
               op=api['paths'][route][method]
@@ -80,6 +76,7 @@ jobs:
           cp=api['components']['securitySchemes']['ClientProof']
           cp['description']='Reviewer-authentication proof for /v1/reviews only. It is not required for purchase, 402 discovery, result retrieval or recovery.'
           p.write_text(json.dumps(api,indent=2,ensure_ascii=False)+'\n')
+          PY
 
       - name: Verify only the corrected boundary
         shell: bash
