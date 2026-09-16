@@ -9,31 +9,44 @@ permissions:
   contents: read
 
 jobs:
-  inspect-x402scan:
+  register-x402scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Inspect public x402scan registration client
+      - name: Discover and register WHP Standing on x402scan
         shell: bash
         run: |
           set -euo pipefail
-          base='https://www.x402scan.com'
-          curl -fsSL "$base/resources/register" -o page.html
+          origin='https://wheelerhubbellpublishingstandingmark.netlify.app'
+          base='https://www.x402scan.com/api/trpc'
+
+          echo '--- DISCOVERY CHECK ---'
+          check_status=$(curl -sS -o check.json -w '%{http_code}' \
+            -X POST "$base/public.resources.checkDiscovery" \
+            -H 'content-type: application/json' \
+            -H 'x-trpc-source: nextjs-react' \
+            --data '{"json":{"origin":"https://wheelerhubbellpublishingstandingmark.netlify.app","bustCache":true}}')
+          echo "HTTP_STATUS=$check_status"
+          cat check.json
+          echo
+
+          echo '--- ORIGIN REGISTRATION ---'
+          reg_status=$(curl -sS -o register.json -w '%{http_code}' \
+            -X POST "$base/public.resources.registerFromOrigin" \
+            -H 'content-type: application/json' \
+            -H 'x-trpc-source: nextjs-react' \
+            --data '{"json":{"origin":"https://wheelerhubbellpublishingstandingmark.netlify.app"}}')
+          echo "HTTP_STATUS=$reg_status"
+          cat register.json
+          echo
+
           python - <<'PY'
-          import re, urllib.parse
-          html=open('page.html',encoding='utf-8').read()
-          srcs=re.findall(r'<script[^>]+src=["\']([^"\']+\.js[^"\']*)',html)
-          with open('scripts.txt','w') as f:
-              for s in srcs:
-                  f.write(urllib.parse.urljoin('https://www.x402scan.com/resources/register',s)+'\n')
-          print('SCRIPT_COUNT',len(srcs))
+          import json, sys
+          raw=json.load(open('register.json'))
+          data=raw.get('result',{}).get('data',{}).get('json',raw.get('result',{}).get('data',{})) if isinstance(raw,dict) else raw
+          print('PARSED_REGISTRATION_RESULT=',json.dumps(data,sort_keys=True))
+          if isinstance(data,dict) and data.get('success') is True:
+              print('X402SCAN_REGISTRATION_ACCEPTED=true')
+              sys.exit(0)
+          print('X402SCAN_REGISTRATION_ACCEPTED=false')
+          sys.exit(1)
           PY
-          : > candidates.txt
-          i=0
-          while IFS= read -r url; do
-            i=$((i+1))
-            file="chunk-$i.js"
-            curl -fsSL "$url" -o "$file" || continue
-            grep -aoE '.{0,140}(discoverOriginSchema|resources/register|registerOrigin|register|/api/[A-Za-z0-9_?=&./:{}-]+).{0,220}' "$file" >> candidates.txt || true
-          done < scripts.txt
-          echo '--- REGISTRATION CLIENT CANDIDATES ---'
-          sed -n '1,240p' candidates.txt
