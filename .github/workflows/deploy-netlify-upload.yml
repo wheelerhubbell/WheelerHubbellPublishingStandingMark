@@ -1,0 +1,44 @@
+name: Upload current WHP source from GitHub to Netlify
+on:
+  push:
+    branches: [ops/github-netlify-upload-20260916]
+    paths: ['.github/workflows/deploy-netlify-upload.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: whp-current-production-authority
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: '0347a387-82b7-4b7f-b528-1024ad79b9e7'
+      SOURCE_COMMIT: '0361bd9d011582290cd544908d5065e23990baf1'
+      CI: 'true'
+    steps:
+      - name: Retrieve the unchanged source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_COMMIT }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install locked dependencies for function packaging only
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Upload directly from this GitHub runner without build or test reruns
+        run: |
+          mkdir -p artifacts
+          npx -y netlify-cli@27.7.0 deploy --prod --no-build --context production --site "$NETLIFY_SITE_ID" --dir public --functions netlify/functions --message "GitHub Actions upload of $SOURCE_COMMIT" --json > artifacts/netlify-deploy.json
+      - name: Report the completed upload
+        run: node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(readFileSync("artifacts/netlify-deploy.json", "utf8"));'
+      - name: Retain the deployment receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-netlify-upload-receipt
+          path: artifacts/netlify-deploy.json
+          if-no-files-found: ignore
