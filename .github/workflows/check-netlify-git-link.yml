@@ -1,4 +1,4 @@
-name: Read-only Netlify Git connection check
+name: Read-only Netlify build failure evidence
 on:
   push:
     branches: [ops/check-netlify-git-link-20260916]
@@ -10,33 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Inspect only the intended site and its latest deploy records
+      - name: Read the exact failed build log
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: 0347a387-82b7-4b7f-b528-1024ad79b9e7
         run: |
           node --input-type=module <<'JS'
           const token=process.env.NETLIFY_AUTH_TOKEN;
-          const id=process.env.NETLIFY_SITE_ID;
-          const result={checked_at:new Date().toISOString(),read_only:true,site_id:id,credential_present:Boolean(token)};
-          if(!token){console.log(JSON.stringify(result,null,2));process.exit(1);}
-          async function read(path){
+          if(!token)throw Error('Stored Netlify credential absent');
+          function redact(text){return String(text).split(token).join('[REDACTED]').replace(/-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----/g,'[REDACTED PRIVATE KEY]').replace(/postgres(?:ql)?:\/\/[^\s"']+/g,'[REDACTED DATABASE URL]').replace(/(Bearer\s+)[A-Za-z0-9._-]+/gi,'$1[REDACTED]');}
+          const paths=[
+            '/sites/0347a387-82b7-4b7f-b528-1024ad79b9e7',
+            '/builds/6aaacd1fff6a7a00098455b0',
+            '/deploys/6aaacd1fff6a7a00098455b2/log',
+            '/builds/6aaacd1fff6a7a00098455b0/log'
+          ];
+          for(const path of paths){
             const r=await fetch('https://api.netlify.com/api/v1'+path,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(20000),redirect:'error'});
-            return {status:r.status,data:r.ok?await r.json():null};
+            console.log(JSON.stringify({read_only:true,path,status:r.status,content_type:r.headers.get('content-type')}));
+            if(!r.ok)continue;
+            const text=await r.text();
+            if(path.endsWith('/log')){console.log(redact(text).slice(-28000));continue;}
+            const data=JSON.parse(text);
+            console.log(JSON.stringify({keys:Object.keys(data),id:data.id,site_id:data.site_id,state:data.state,error:data.error,error_message:data.error_message,done:data.done,repo:data.repo?{provider:data.repo.provider,repo_path:data.repo.repo_path,repo_branch:data.repo.repo_branch,repo_url:data.repo.repo_url,cmd:data.repo.cmd,dir:data.repo.dir,stop_builds:data.repo.stop_builds}:null}));
           }
-          const site=await read('/sites/'+id);
-          result.site_http_status=site.status;
-          if(site.data){
-            const s=site.data,b=s.build_settings??{};
-            result.site={id:s.id,name:s.name,account_id:s.account_id,repo_url:b.repo_url??null,repo_path:b.repo_path??null,repo_branch:b.repo_branch??null,provider:b.provider??null,stop_builds:b.stop_builds??null,build_command:b.cmd??null,publish_directory:b.dir??null,builds_enabled:s.builds_enabled??null};
-            const deploys=await read('/sites/'+id+'/deploys?per_page=5');
-            result.deploys_http_status=deploys.status;
-            result.deploys=(deploys.data??[]).map(d=>({id:d.id,state:d.state,build_id:d.build_id,commit_ref:d.commit_ref,branch:d.branch,deploy_source:d.deploy_source,created_at:d.created_at,published_at:d.published_at,error_message:d.error_message??null}));
-          }else{
-            const user=await read('/user');
-            result.credential_user_http_status=user.status;
-            result.credential_user_id=user.data?.id??null;
-          }
-          console.log(JSON.stringify(result,null,2));
-          if(site.status!==200)process.exitCode=1;
           JS
