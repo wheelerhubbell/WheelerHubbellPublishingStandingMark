@@ -1,4 +1,4 @@
-name: Read-only Git production deployment evidence
+name: Unpaid production service verification
 on:
   push:
     branches: [ops/check-netlify-git-link-20260916]
@@ -8,66 +8,69 @@ permissions:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 3
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0361bd9d011582290cd544908d5065e23990baf1
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Observe exact Git deploy and collect nonsecret evidence
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      - name: Observe public service and unpaid purchase only
         run: |
           node --input-type=module <<'JS'
-          import {writeFile} from 'node:fs/promises';
-          const token=process.env.NETLIFY_AUTH_TOKEN,site='0347a387-82b7-4b7f-b528-1024ad79b9e7',commit='0361bd9d011582290cd544908d5065e23990baf1';
-          if(!token)throw Error('Stored Netlify credential absent');
-          const sensitive=[token];
-          function redact(text){let s=String(text);for(const value of sensitive)if(value)s=s.split(value).join('[REDACTED]');return s.replace(/-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----/g,'[REDACTED PRIVATE KEY]').replace(/postgres(?:ql)?:\/\/[^\s"']+/g,'[REDACTED DATABASE URL]');}
-          async function read(path){const r=await fetch('https://api.netlify.com/api/v1'+path,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000),redirect:'error'});if(!r.ok)throw Error('Netlify read HTTP '+r.status);return r.json();}
-          let deploy;
-          for(let i=0;i<18;i++){
-            const ds=await read('/sites/'+site+'/deploys?per_page=10');deploy=ds.find(d=>d.commit_ref===commit);
-            if(deploy&&['ready','error','rejected','cancelled'].includes(deploy.state))break;
-            await new Promise(r=>setTimeout(r,5000));
+          import {readFile,writeFile} from 'node:fs/promises';
+          import {randomBytes} from 'node:crypto';
+          import {canonical,parseStrict,hash} from './src/canonical.mjs';
+          import {validateTrust,authorize} from './src/authority.mjs';
+          import {validateSubmission} from './src/validation.mjs';
+          const origin='https://wheeler-hubbell-publishing-standing-mark.netlify.app';
+          const source='0361bd9d011582290cd544908d5065e23990baf1';
+          const report={observed_at:new Date().toISOString(),source_commit:source,origin,production_code_changed:false,deployment_triggered:false,payment_sent:false,wallet_used:false,probe:'Deliberately ineligible sample; unpaid quotation and durable purchase identity only. Not proof of eligible live issuance.'};
+          async function request(path,method='GET',body){
+            const started=Date.now();
+            const r=await fetch(origin+path,{method,headers:body===undefined?{}:{'content-type':'application/json'},body,redirect:'error',signal:AbortSignal.timeout(20000)});
+            const raw=await r.text();let data;try{data=parseStrict(raw,1048576);}catch{data=null;}
+            return {status:r.status,elapsed_ms:Date.now()-started,request_id:r.headers.get('x-nf-request-id'),payment_required:r.headers.get('payment-required'),data};
           }
-          const report={checked_at:new Date().toISOString(),read_only:true,source_commit:commit,site_id:site,payment_executed:false,deploy:deploy?{id:deploy.id,build_id:deploy.build_id,state:deploy.state,commit_ref:deploy.commit_ref,published_at:deploy.published_at??null}:null};
-          console.log(JSON.stringify(report));
-          if(deploy){
-            const url=new URL('https://app.netlify.com/access-control/generate-access-control-token');url.searchParams.set('site_id',site);url.searchParams.set('deploy_id',deploy.id);
-            const auth=await fetch(url,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000),redirect:'error'});
-            report.log_access_http_status=auth.status;
-            if(auth.ok){
-              const a=await auth.json(),access=a.accessControlToken;sensitive.push(access);
-              if(access){
-                const lines=[];
-                await new Promise(resolve=>{
-                  const ws=new WebSocket('wss://socketeer.services.netlify.com/build/logs');let idle,done=false;
-                  function finish(){if(done)return;done=true;clearTimeout(idle);clearTimeout(deadline);ws.close();resolve();}
-                  const deadline=setTimeout(finish,30000);
-                  ws.addEventListener('open',()=>ws.send(JSON.stringify({access_token:access,site_id:site,deploy_id:deploy.id})));
-                  ws.addEventListener('message',event=>{for(const part of String(event.data).split('\n')){if(!part.trim())continue;try{const e=JSON.parse(part);lines.push(redact(e.message??''));}catch{lines.push('[non-JSON log event]');}}clearTimeout(idle);idle=setTimeout(finish,4000);});
-                  ws.addEventListener('error',()=>{report.log_connection_error=true;finish();});ws.addEventListener('close',finish);
-                });
-                report.build_log_messages=lines.length;
-                report.relevant_build_log=lines.filter(x=>/activation_authority_verified|deployment_|error|Error|failed|Failed|pass |fail |tests |subtests|Subtest|completed|published|Published|live_|WHP_USE_NETLIFY_DATABASE|42501|permission|read.only/i.test(x));
-                await writeFile('netlify-build.log',lines.join('\n')+'\n');
-              }
+          try{
+            const [health,discovery,resolution]=await Promise.all([request('/healthz'),request('/.well-known/whp-standing.json'),request('/.well-known/standing-capability.json')]);
+            report.health={status:health.status,data:health.data};
+            report.discovery={status:discovery.status,environment:discovery.data?.environment,evaluation_url:discovery.data?.evaluation_url};
+            report.resolution={status:resolution.status};
+            const root=JSON.parse(await readFile('public/authority/root.json','utf8'));
+            if(resolution.status===200){
+              const p=resolution.data.payload,at=Math.floor(Date.now()/1000),trust=validateTrust(p.trust_bundle,root.root_pin,at);
+              authorize(resolution.data,'WHP-CAPABILITY-RESOLUTION-v1','DISCOVERY',p.authority_context,trust);
+              report.resolution.signature_verified=true;report.resolution.current=p.observed_at<=at+30&&at<p.valid_until;report.resolution.service_origin=p.service_origin;
             }
-          }
-          report.public_reads=[];
-          for(const path of ['/healthz','/.well-known/whp-standing.json']){
-            const r=await fetch('https://wheeler-hubbell-publishing-standing-mark.netlify.app'+path,{signal:AbortSignal.timeout(15000),redirect:'error'});
-            const raw=await r.text();let data;try{data=JSON.parse(raw);}catch{data={parse_error:true};}
-            report.public_reads.push({path,status:r.status,service:data.service,version:data.version,environment:data.environment,root_pin:data.root_pin,evaluation_url:data.evaluation_url,live_completion_proven:data.live_completion_proven});
-          }
-          await writeFile('deployment-readback.json',JSON.stringify(report,null,2)+'\n');
+            const sample=JSON.parse(await readFile('public/examples/submission.TEST.json','utf8'));
+            const now=Math.floor(Date.now()/1000);
+            sample.client_reference=randomBytes(32).toString('hex');
+            sample.bounds={scope:'whp-standing-structured-passage',jurisdiction:'protocol-structural-assessment-only',valid_from:now-30,valid_until:now+900};
+            validateSubmission(sample);
+            const body=canonical(sample),first=await request('/v1/evaluations','POST',body);
+            report.unpaid_post={status:first.status,elapsed_ms:first.elapsed_ms,request_id:first.request_id,error:first.data?.error??null,payment_required_header_present:Boolean(first.payment_required),eligibility:first.data?.eligibility??null};
+            if(first.status===402){
+              const terms=first.data,quote=terms.extensions?.['whp-standing']?.info?.quote;
+              const trust=validateTrust(discovery.data.trust_bundle,root.root_pin,Math.floor(Date.now()/1000));
+              authorize(quote,'WHP-STANDING-QUOTE-v1.1','ISSUER',sample.bounds,trust);
+              report.unpaid_post.quote_signature_verified=true;report.unpaid_post.request_hash_matches=quote.payload.request_hash===hash(sample);
+              report.unpaid_post.x402_version=terms.x402Version;report.unpaid_post.payment_requirements=terms.accepts;
+              const second=await request('/v1/evaluations','POST',body);
+              report.idempotent_repeat={status:second.status,same_purchase_id:second.data?.purchase_id===terms.purchase_id};
+              const retrieval=await request('/v1/purchases/'+terms.purchase_id+'/result');
+              report.unpaid_retrieval={status:retrieval.status,state:retrieval.data?.state??null,error:retrieval.data?.error??null};
+              report.expected_negative_eligibility=terms.eligibility?.can_produce_mark===false;
+            }
+          }catch(e){report.probe_error={code:e.code??null,message:e.message};}
+          await writeFile('live-unpaid-verification.json',JSON.stringify(report,null,2)+'\n');
           console.log(JSON.stringify(report,null,2));
           JS
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: exact-git-production-deployment-evidence
-          path: |
-            deployment-readback.json
-            netlify-build.log
+          name: live-unpaid-verification
+          path: live-unpaid-verification.json
           if-no-files-found: error
