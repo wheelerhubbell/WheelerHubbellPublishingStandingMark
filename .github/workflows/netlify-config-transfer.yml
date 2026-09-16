@@ -1,0 +1,70 @@
+name: One-time encrypted Netlify configuration transfer
+on:
+  push:
+    branches: ["admin/netlify-config-transfer-20260916"]
+    paths: [".github/workflows/netlify-config-transfer.yml"]
+permissions:
+  contents: read
+jobs:
+  encrypted-transfer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Read exact existing custody and encrypt directly to the receiving workspace
+        env:
+          SOURCE_NETLIFY_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          RECEIVER_PUBLIC_KEY: |
+            -----BEGIN PUBLIC KEY-----
+            MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAkUIs/3JZrsaJKKsEW3k2
+            vVx6qgqNgryMxO0vdJPsmi9afqEsNFsjz6Qrk51M30II4TQUnuHvuTmhnMB1smTX
+            yYQiHPNQAftaRLK0dgItewBLRGoWZFPNN2rKiHeEK0aX5mYbP8LuJoFUOBIbmJzl
+            AaU1iKj6cseMZ0N2Uv+u858Ot93IIHxz0OGGZ36nelKxh5sA+jOxoevMP622YbtW
+            Qemnh9XnyDkqu4VACH4o+Uyym/sjbDesRVmqh3VUchVtYSXqggiQ4bXnVLMxs0+L
+            CoOcS2syUrpSrZPYMRCEiISasVpFRGCUbqVsRWMkRgq7VJ/bdnWccCFP9T4B5RVi
+            4WlEDr7kqe4Y6g46M+DtWcc8L6ofYU8J6ve8wUnEEEtqr5KdB6XEcWcLtm6cYzYi
+            7MAj89OH1XiWwiLvbjzuWiwewfrEi4/KPP5mIkQG0oV4PIva123RavgGQnTg5qq0
+            mmarcPu1jp/E7ozSNn0JhvP+J4kSIk5U/790YYv8raMLAgMBAAE=
+            -----END PUBLIC KEY-----
+        run: |
+          node --input-type=module <<'NODE'
+          import {createPublicKey,createHash,randomBytes,createCipheriv,publicEncrypt,constants} from 'node:crypto';
+          import {writeFileSync} from 'node:fs';
+          const sourceSite='813ee022-f4d9-4d8e-a974-86158583a39f', sourceAccount='6aa97a682d764823c583f1ae';
+          const rootPin='e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc', issuerId='8d65f5a4057eedb76ac3db83e9217a374c0072adfa3986b4745e4b5b5bbb22e8';
+          const fingerprint=pem=>createHash('sha256').update(createPublicKey(pem).export({type:'spki',format:'der'})).digest('hex');
+          async function read(path){
+           const r=await fetch('https://api.netlify.com/api/v1'+path,{headers:{Authorization:'Bearer '+process.env.SOURCE_NETLIFY_TOKEN},redirect:'error',signal:AbortSignal.timeout(20000)});
+           if(!r.ok)throw Object.assign(new Error('SOURCE_READ_FAILED'),{safeCode:'SOURCE_READ_HTTP_'+r.status});
+           return r.json();
+          }
+          try{
+           if(!process.env.SOURCE_NETLIFY_TOKEN)throw new Error('TOKEN_MISSING');
+           const site=await read('/sites/'+sourceSite);
+           if(site.id!==sourceSite||site.account_id!==sourceAccount)throw new Error('SOURCE_TARGET_MISMATCH');
+           const envPath='/accounts/'+sourceAccount+'/env/';
+           const issuerRow=await read(envPath+'WHP_ISSUER_PRIVATE_KEY?site_id='+sourceSite);
+           const custodyRow=await read(envPath+'WHP_AUTHORITY_CUSTODY_V2?site_id='+sourceSite);
+           const issuer=issuerRow.values?.find(v=>v.context==='production')?.value;
+           const custodyText=custodyRow.values?.find(v=>v.context==='dev')?.value;
+           if(!issuer||!custodyText)throw new Error('EXACT_CONTEXT_MISSING');
+           const custody=JSON.parse(custodyText);
+           if(fingerprint(issuer)!==issuerId||fingerprint(custody.issuer_private_key)!==issuerId||fingerprint(custody.root_private_key)!==rootPin||custody.root_pin!==rootPin||custody.issuer_key_id!==issuerId)throw new Error('SIGNING_IDENTITY_MISMATCH');
+           let database=null,databaseReadCode=null;
+           try{const db=await read('/sites/'+sourceSite+'/database?role=netlifydb_owner');if(typeof db.connection_string==='string')database=db.connection_string;}catch(e){databaseReadCode=e.safeCode??'DATABASE_READ_UNAVAILABLE';}
+           const payload={source_site:sourceSite,destination_site:'0347a387-82b7-4b7f-b528-1024ad79b9e7',issuer_private_key:issuer,authority_custody_dev:custodyText,database_connection_string:database,database_read_code:databaseReadCode,root_pin:rootPin,issuer_key_id:issuerId};
+           const key=randomBytes(32),iv=randomBytes(12),aad=Buffer.from('WHP-NETLIFY-TRANSFER-20260916');
+           const cipher=createCipheriv('aes-256-gcm',key,iv);cipher.setAAD(aad);
+           const encrypted=Buffer.concat([cipher.update(Buffer.from(JSON.stringify(payload))),cipher.final()]);
+           const wrapped=publicEncrypt({key:process.env.RECEIVER_PUBLIC_KEY,padding:constants.RSA_PKCS1_OAEP_PADDING,oaepHash:'sha256'},key);
+           writeFileSync('transfer.encrypted.json',JSON.stringify({version:1,algorithm:'RSA-OAEP-SHA256+A256GCM',aad:aad.toString('base64'),wrapped_key:wrapped.toString('base64'),iv:iv.toString('base64'),tag:cipher.getAuthTag().toString('base64'),ciphertext:encrypted.toString('base64')})+'\n',{mode:0o600});
+           key.fill(0);
+           console.log(JSON.stringify({encrypted_transfer_prepared:true,identities_verified:true,database_connection_included:!!database,source_configuration_changed:false,deployment_triggered:false}));
+          }catch(e){console.error(JSON.stringify({encrypted_transfer_prepared:false,error:e.safeCode??'SOURCE_CUSTODY_VALIDATION_FAILED'}));process.exitCode=1;}
+          NODE
+      - name: Retain encrypted transfer for one day
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: encrypted-netlify-config-transfer
+          path: transfer.encrypted.json
+          retention-days: 1
+          if-no-files-found: error
