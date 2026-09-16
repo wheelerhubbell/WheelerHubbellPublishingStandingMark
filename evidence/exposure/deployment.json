@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-09-16T02:30:08Z",
+  "id": "6aa9feea9d0a5a00084f91d5",
+  "site_id": "813ee022-f4d9-4d8e-a974-86158583a39f",
+  "state": "ready",
+  "commit_ref": "163ed800fef08552c2c47f591b5b9d5e313c1a5d",
+  "published_at": "2026-09-16T02:29:16.187Z",
+  "links": {
+    "permalink": "https://6aa9feea9d0a5a00084f91d5--wheelerhubbellpublishingstandingmark.netlify.app",
+    "alias": "https://wheelerhubbellpublishingstandingmark.netlify.app",
+    "branch": null
+  },
+  "publication_run": 35048147130,
+  "artifact_id": 10428011519,
+  "artifact_sha256": "a7458696a027828870868d292883d4c5e8f654db5181051854f7bfd9b7c8b6d1"
+}

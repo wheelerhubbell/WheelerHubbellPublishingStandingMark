@@ -1,0 +1,322 @@
+{
+  "origin": "https://wheelerhubbellpublishingstandingmark.netlify.app",
+  "controlled_registration": true,
+  "independent_customer_encounter": false,
+  "mcp_records": [
+    {
+      "server": {
+        "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+        "name": "io.github.wheelerhubbell/whp-standing",
+        "description": "Verify signed JSON provenance and bounds through COPY/COMPOSE. Payment does not guarantee a Mark.",
+        "repository": {
+          "url": "https://github.com/wheelerhubbell/WheelerHubbellPublishingStandingMark",
+          "source": "github"
+        },
+        "version": "1.0.0",
+        "remotes": [
+          {
+            "type": "streamable-http",
+            "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/mcp"
+          }
+        ]
+      },
+      "_meta": {
+        "io.modelcontextprotocol.registry/official": {
+          "status": "active",
+          "statusChangedAt": "2026-09-16T02:29:28.574957Z",
+          "publishedAt": "2026-09-16T02:29:28.574957Z",
+          "updatedAt": "2026-09-16T02:29:28.574957Z",
+          "isLatest": true
+        }
+      }
+    }
+  ],
+  "mcp_registered": true,
+  "agent402_checked_pages": [
+    null
+  ],
+  "agent402_records": [
+    {
+      "origin": "https://wheelerhubbellpublishingstandingmark.netlify.app",
+      "displayName": "WHP Standing",
+      "homepage": "https://wheelerhubbellpublishingstandingmark.netlify.app",
+      "toolCount": 16,
+      "fetchedAt": 1789525797840,
+      "error": null,
+      "health": 0.5,
+      "routable": true,
+      "networks": [],
+      "paywall": null,
+      "mpp": null,
+      "originResponded": true,
+      "discoveryPath": "/.well-known/x402",
+      "payToByNetwork": {},
+      "payTosByNetwork": {},
+      "evmDomainByNetwork": {},
+      "tools": [
+        {
+          "method": "GET",
+          "route": "/discovery/capability.json",
+          "slug": "discovery-capability.json",
+          "name": "Provider capability description, not epistemic standing.",
+          "price": null
+        },
+        {
+          "method": "GET",
+          "route": "/discovery/provider-index.json",
+          "slug": "discovery-provider-index.json",
+          "name": "Self-published capability index, not an external registration.",
+          "price": null
+        },
+        {
+          "method": "POST",
+          "route": "/mcp",
+          "slug": "callStandingMcp",
+          "name": "Stateless Streamable HTTP MCP; no wallet credentials accepted.",
+          "price": null,
+          "requestContract": {
+            "state": "declared",
+            "source": "seller_openapi",
+            "required": {
+              "body": [
+                "jsonrpc",
+                "method"
+              ]
+            },
+            "runtimeVerified": false
+          }
+        },
+        {
+          "method": "GET",
+          "route": "/server.json",
+          "slug": "getMcpServerMetadata",
+          "name": "getMcpServerMetadata",
+          "price": null
+        },
+        {
+          "method": "GET",
+          "route": "/v1/contract",
+          "slug": "getStandingPurchaseContract",
+          "name": "getStandingPurchaseContract",
+          "price": null
+        },
+        {
+          "method": "GET",
+          "route": "/v1/contracts/mark-v1.json",
+          "slug": "v1-contracts-mark-v1.json",
+          "name": "Immutable first-public historical contract manifest.",
+          "price": null
+        },
+        {
+          "method": "POST",
+          "route": "/v1/evaluations",
+          "slug": "purchaseEvaluation",
+          "name": "purchaseEvaluation",
+          "price": null,
+          "requestContract": {
+            "state": "partial",
+            "source": "seller_openapi",
+            "required": {},
+            "runtimeVerified": false
+          }
+        },
+        {
+          "method": "GET",
+          "route": "/v1/immutable/{sha256}",
+          "slug": "v1-immutable-{sha256}",
+          "name": "Immutable profile, schema or semantic contract by SHA-256.",
+          "price": null,
+          "urlTemplate": true,
+          "pathParams": [
+            "sha256"
+          ],
+          "requestContract": {
+            "state": "declared",
+            "source": "seller_openapi",
+            "required": {
+              "path": [
+                "sha256"
+              ]
+            },
+            "runtimeVerified": false
+          }
+        },
+        {
+          "method": "GET",
+          "route": "/v1/profile",
+          "slug": "getProfile",
+          "name": "getProfile",
+          "price": null
+        },
+        {
+          "method": "GET",
+          "route": "/v1/profiles",
+          "slug": "v1-profiles",
+          "name": "Current published profile index; historical Marks bind exact embedded content.",
+          "price": null
+        },
+        {
+          "method": "GET",
+          "route": "/v1/profiles/{profile_id}/{version}",
+          "slug": "getStandingProfileVersion",
+          "name": "getStandingProfileVersion",
+          "price": null,
+          "urlTemplate": true,
+          "pathParams": [
+            "profile_id",
+            "version"
+          ],
+          "requestContract": {
+            "state": "declared",
+            "source": "seller_openapi",
+            "required": {
+              "path": [
+                "profile_id",
+                "version"
+              ]
+            },
+            "runtimeVerified": false
+          }
+        },
+        {
+          "method": "POST",
+          "route": "/v1/purchases/{purchase_id}/recover",
+          "slug": "recoverOriginalPurchase",
+          "name": "recoverOriginalPurchase",
+          "price": null,
+          "urlTemplate": true,
+          "pathParams": [
+            "purchase_id"
+          ],
+          "requestContract": {
+            "state": "declared",
+            "source": "seller_openapi",
+            "required": {
+              "path": [
+                "purchase_id"
+              ]
+            },
+            "runtimeVerified": false
+          }
+        },
+        {
+          "method": "GET",
+          "route": "/v1/purchases/{purchase_id}/result",
+          "slug": "retrieveResult",
+          "name": "retrieveResult",
+          "price": null,
+          "urlTemplate": true,
+          "pathParams": [
+            "purchase_id"
+          ],
+          "requestContract": {
+            "state": "declared",
+            "source": "seller_openapi",
+            "required": {
+              "path": [
+                "purchase_id"
+              ]
+            },
+            "runtimeVerified": false
+          }
+        },
+        {
+          "method": "GET",
+          "route": "/v1/registry/{purchase_id}",
+          "slug": "readRegistry",
+          "name": "readRegistry",
+          "price": null,
+          "urlTemplate": true,
+          "pathParams": [
+            "purchase_id"
+          ],
+          "requestContract": {
+            "state": "declared",
+            "source": "seller_openapi",
+            "required": {
+              "path": [
+                "purchase_id"
+              ]
+            },
+            "runtimeVerified": false
+          }
+        },
+        {
+          "method": "POST",
+          "route": "/v1/reviews",
+          "slug": "submitReview",
+          "name": "submitReview",
+          "price": null
+        },
+        {
+          "method": "GET",
+          "route": "/v1/verification",
+          "slug": "getStandingVerification",
+          "name": "getStandingVerification",
+          "price": null
+        }
+      ],
+      "paymentNetworksKnown": false,
+      "routerDispatchEligible": false,
+      "routerDispatchReason": "network_unknown",
+      "legend": {
+        "routable": "the last crawl of this origin succeeded (manifest, OpenAPI or a live 402 was read). It is crawl readiness, never a promise that the router will pay the seller.",
+        "health": "a score from the last crawl outcomes of this origin; 1 = every recent crawl succeeded.",
+        "networks": "chains the seller's own 402 challenges advertise; empty means the crawl could not learn any.",
+        "paymentNetworksKnown": "true when at least one payment network was learned from the seller's 402s.",
+        "networksInferred": "present and true on a route row that observed no accepts of its own and inherited the chains its seller advertises elsewhere (other routes, or the Bazaar's settled view); the router still pins the chain from the live 402 before it signs.",
+        "routerDispatchEligible": "true when this host's Smart Order Router will pay the seller on a buyer's behalf right now on at least one chain it holds a spending wallet for.",
+        "routerDispatchReason": {
+          "crawl_failed": "the last crawl of this origin did not succeed, so nothing is routed to it",
+          "network_unknown": "the crawl learned no payment network (the paid route answered something other than a 402 to the unpaid probe), so the router cannot tell which chain to pay on",
+          "no_supported_route": "the seller advertises no chain this host holds a spending wallet for",
+          "settlement_required": "on Base the router pays only sellers with on-chain settlement history above the floor from enough distinct payers",
+          "settlement_checked_at_pay_time": "on this chain proven-ness is read from the chain at pay time (recent inbound USDC to the seller's own payTo); a thin history may still be tried under the small unproven allowance",
+          "price_unknown": "no seller price is known for this route, and the router never spends against an unknown price",
+          "url_template": "the route is an unsubstituted path template; the router never spends against it",
+          "usdc_domain_mismatch": "the seller's USDC accept on this chain advertises an EIP-712 domain name that is not the token's own (Base USDC signs under \"USD Coin\"; Monad, Celo and Sei USDC under \"USDC\"), so a stock x402 buyer - this router included - signs an authorization the facilitator refuses and nothing settles; the seller has to fix the accept before anyone can pay it",
+          "delivery_failing": "the last time this router paid this seller on this chain the call did not deliver (a 5xx answer carrying no settle receipt, or no answer at all before the timeout), so it is skipped until that memo expires or a call to it succeeds. Settlement history is evidence about the past; this is what happened the last time someone actually paid",
+          "eligible": "the router will pay this seller on a buyer's behalf",
+          "local_catalog": "this host's own tool; no external payment is involved"
+        },
+        "evmDomainByNetwork": "the EIP-712 domain (asset + extra.name) each of the seller's EVM accepts advertised on its 402; the router label refuses a Base accept whose name is not the token's own (usdc_domain_mismatch) because no stock x402 signature under it can verify.",
+        "routerDispatchDetail": {
+          "evidence_payto_mismatch": "the settlement history this origin inherits belongs to a wallet its own 402 does not ask to be paid at, so it does not count for this origin",
+          "evidence_payto_unverified": "the settlement history this origin inherits belongs to a specific wallet and the origin's own Base payTo could not be read, so it does not count until the live 402 names that wallet",
+          "_note": "settlement_required may carry one of these in routerDispatchByChain.base.detail beside the gate's own sentence; settlement history inherited through a shared payTo counts for an origin only when the origin's own 402 pays that wallet, which the router checks live before it signs"
+        },
+        "executeVia": "present only on a row the router will pay right now: the route-execute tier (and price) that runs it. Its absence on a priced row is deliberate.",
+        "executeViaWhenEligible": "the route-execute tier this row WOULD run under once its seller is dispatch-eligible; not callable through the router today.",
+        "executeViaCallableNow": "true on rows carrying executeVia, false on rows carrying executeViaWhenEligible. A buyer agent should key on this, never on the presence of a tier name.",
+        "routerDispatchReason.delivery_failing": "this host paid this seller on this chain and the call did not deliver, so we stopped routing to them until the memo expires or a call succeeds. The verdict is published because it is a statement about what WE do; the underlying observation (the status they answered, how long it took) is deliberately NOT published, because that is a specific adverse claim about a named third party and every other figure on these pages is a count or a gate verdict. A seller who wants to know what we saw can ask us."
+      }
+    }
+  ],
+  "agent402_index_readback_verified": true,
+  "agent402_registration_response": {
+    "listed": true,
+    "origin": "https://wheelerhubbellpublishingstandingmark.netlify.app",
+    "seller": {
+      "displayName": "WHP Standing",
+      "toolCount": 16,
+      "networks": [],
+      "routable": true,
+      "health": 0.5
+    }
+  },
+  "agent402_count_caveat": "The index inferred 16 routes/tools from public metadata. WHP has one paid evaluation capability; this count is not 16 independently executable paid tools. Generic random-nonce x402 execution remains incompatible.",
+  "trace": [
+    {
+      "url": "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.wheelerhubbell%2Fwhp-standing",
+      "status": 200,
+      "sha256": "289ab4f6821f5305089b1e23dcf5ed28dfe617c346fd0e3daf5fe803fd4937c7",
+      "observed_at": "2026-09-16T02:31:22.979Z"
+    },
+    {
+      "url": "https://agent402.tools/api/index?seller=wheelerhubbellpublishingstandingmark.netlify.app",
+      "status": 200,
+      "sha256": "6a41b5ea26aabe11af80cc69acfb3803a333541059f27b9b4e062350d8eb499b",
+      "observed_at": "2026-09-16T02:31:28.139Z"
+    }
+  ]
+}

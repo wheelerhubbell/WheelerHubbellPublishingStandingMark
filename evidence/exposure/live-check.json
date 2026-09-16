@@ -1,0 +1,198 @@
+{
+  "checked_at": "2026-09-16T02:29:43.353Z",
+  "origin": "https://wheelerhubbellpublishingstandingmark.netlify.app",
+  "kind": "CONTROLLED_PUBLIC_ONLY_TRAVERSAL",
+  "producer_imports": false,
+  "wallet_authorizations": 0,
+  "settlements": 0,
+  "independent_external_encounter": false,
+  "institutional_root_admission": false,
+  "resolution_signature_and_contract_commitment_verified": true,
+  "verifier_bytes_verified": true,
+  "verifier_execution": false,
+  "mark_verification": "NOT_EXECUTED_NO_PAID_MARK_SUPPLIED",
+  "mcp_resources_verified": 6,
+  "unpaid_acquisition_entry_verified": true,
+  "bazaar_extension_present": true,
+  "publication": true,
+  "external_reachability": true,
+  "controlled_machine_interpretation": true,
+  "actual_buyer_relevance": "UNKNOWN",
+  "completed_acquisition": "NOT_OBSERVED",
+  "subsequent_mark_encounter": "NOT_OBSERVED",
+  "recursive_acquisition": "NOT_OBSERVED",
+  "state": "PASS",
+  "trace": [
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog",
+      "method": "GET",
+      "status": 200,
+      "sha256": "147f7f6d2755a8b096219d9cb21df6466da8d6af2888837b832f2271735525ed",
+      "request_id": "01M2M0S8PW5WP0SE6MS717EXE5",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:29:55 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/v1/contract",
+      "method": "GET",
+      "status": 200,
+      "sha256": "f90e49e78f164944c661da533bb1d6266158d5232ca35ba593d2f0941e7837a2",
+      "request_id": "01M2M0S8YF8DRRCPDPR7QS3YW5",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:29:55 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/llms.txt",
+      "method": "GET",
+      "status": 200,
+      "sha256": "0ba11c03ad66c51a731cd4769a6c1963ccd4f4318d74591c134d832010bae33a",
+      "request_id": "01M2M0S96G0PH690R3XTNR68GE",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:29:56 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/provider-index.json",
+      "method": "GET",
+      "status": 200,
+      "sha256": "d517d0fd85dfc1ca373f9dd4f23dc9089c1492d1b13b1bd1461495f76edae072",
+      "request_id": "01M2M0SEMC3WDDPV37WBVGXCH2",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:01 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/x402",
+      "method": "GET",
+      "status": 200,
+      "sha256": "4f870c21bca0023d94d17ab952fcc019bf548eddc3fa1c371205a933502b9ed8",
+      "request_id": "01M2M0SENY1TWMAH59N77HHAZK",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:01 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json",
+      "method": "GET",
+      "status": 200,
+      "sha256": "2223530f731cf14b1491aaee07a89ab35ddd479e64a0cbcbcbfd3d9865516acc",
+      "request_id": "01M2M0SEMC7AJ38Q4N11TD471A",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:01 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/openapi.json",
+      "method": "GET",
+      "status": 200,
+      "sha256": "4df760aa5c796830b4cda3b4513a47683f97415d738a468b9a9127cea47b975e",
+      "request_id": "01M2M0SEMCD24B9TTAW1261S65",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:01 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/robots.txt",
+      "method": "GET",
+      "status": 200,
+      "sha256": "052a00f091be3253541e2a83b58a2afe5d8f22163a318da01bc6822862ea288d",
+      "request_id": "01M2M0SEM9J1544TW5YKPQZ6G6",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:01 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/server.json",
+      "method": "GET",
+      "status": 200,
+      "sha256": "26d65f1f5a5cacd1470f9ebe71b135cb72ec794924187c14c32e2b446fd75866",
+      "request_id": "01M2M0SEM4YDT7AVND00Q7RY5K",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:01 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/capability.json",
+      "method": "GET",
+      "status": 200,
+      "sha256": "4d6050681858b081b2ac1d6e2f42e40f3486297c9ed5027579844be03d0c05d6",
+      "request_id": "01M2M0SEMG7RKCGZEGDWV696FV",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:01 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/sitemap.xml",
+      "method": "GET",
+      "status": 200,
+      "sha256": "68b83c974e765a981508f2d5a962f2c7c2b42b449b0755a086057cdf17e27712",
+      "request_id": "01M2M0SEMJZB65F7BKK4GESQ3H",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:01 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/applicability.json",
+      "method": "GET",
+      "status": 200,
+      "sha256": "d96a025478aad54a5ec4740d98c8c35b3a7fcb8a29a085ab6ebd26fa32362bc1",
+      "request_id": "01M2M0SEMKRJEXA2XE73YG89QF",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:02 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/standing-capability.json",
+      "method": "GET",
+      "status": 200,
+      "sha256": "00955fca87f25c143f20eb8963bdf50e098656891e849d20cc53dc57f1e546d8",
+      "request_id": "01M2M0SKQH54APBWMS9NEDZTNY",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:07 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/v1/verification",
+      "method": "GET",
+      "status": 200,
+      "sha256": "5070939145ee41d8e08f697805e8292a56582074ad32aec4b578c504cc8630c8",
+      "request_id": "01M2M0SM3CCACJVD5P5TWYGQV1",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:07 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/verification/bb8cb78205f1892dcbf00d845cf85e504a0efacf2a0d8a793313fa8c0e99b833.py",
+      "method": "GET",
+      "status": 200,
+      "sha256": "bb8cb78205f1892dcbf00d845cf85e504a0efacf2a0d8a793313fa8c0e99b833",
+      "request_id": "01M2M0SMBEK67NEHFB5DH5QS60",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:07 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/mcp",
+      "method": "POST",
+      "status": 200,
+      "sha256": "811ec0c377b3aff93d207d0d289cb6d0cc90e6ab5458451338d41b5dcd42099e",
+      "request_id": "01M2M0SMJP5GTYEDYVDD22QWSK",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:07 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/mcp",
+      "method": "POST",
+      "status": 200,
+      "sha256": "2348b698af052ab667d181228db516e8692c94a00fe1bc6a054d8fc8ff5e2b79",
+      "request_id": "01M2M0SMS7TBPH0VBF1ZSAVBNR",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:08 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/mcp",
+      "method": "POST",
+      "status": 200,
+      "sha256": "6c11af5eb6ad8fd6e158f5832ec920c8c450573aad6a2238d5675502d6d81dbe",
+      "request_id": "01M2M0SMZFJX7G4FZF09Y7HPMZ",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:08 GMT"
+    },
+    {
+      "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/v1/evaluations",
+      "method": "POST",
+      "status": 402,
+      "sha256": "28b1d4adcbac7ba6947deec5687ac097f227792a545d8ae8a7839d4fdaf19451",
+      "request_id": "01M2M0SN6KVEADBQKSJKVGA5SZ",
+      "link": "<https://wheelerhubbellpublishingstandingmark.netlify.app/.well-known/api-catalog>; rel=\"api-catalog\", <https://wheelerhubbellpublishingstandingmark.netlify.app/v1/openapi.json>; rel=\"service-desc\"; type=\"application/json\", <https://wheelerhubbellpublishingstandingmark.netlify.app/discovery/recursive-use.json>; rel=\"describedby\"; type=\"application/json\"",
+      "date": "Wed, 16 Sep 2026 02:30:08 GMT"
+    }
+  ]
+}
