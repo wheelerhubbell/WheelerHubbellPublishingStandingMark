@@ -32,14 +32,13 @@ Migration is an explicit authorized administrative operation on the configured p
 
 ## Buyer runtime
 
-The buyer needs its own durable Ed25519 HTTP-authentication key, an independently authorized wallet provider, policy, canonical signed submission, persistent SQLite journal, and independent trusted chain RPC. The owner—not this library—grants spending authority to the wallet provider.
+The production reference buyer is published through `/v1/contract` → `purchase.buyer_client`, with a hash-bound downloadable runtime and [invocation guide](../public/buyer/README.md). It needs an independently authorized wallet provider, policy, canonical signed submission, persistent SQLite journal, and independent trusted chain RPC. No WHP-specific buyer authentication signature or private key is required. The public `buyer_key` remains part of the frozen purchase identity; source/transition provenance signatures remain distinct and intact. The owner—not this library—grants spending authority to the wallet provider.
 
 The policy fields are `environment`, `origin`, `root_pin`, `profile_hash`, `network`, `asset`, `pay_to`, `payer`, `asset_name`, `asset_version`, `max_per_purchase`, and `max_total`. Amount limits are integer token-base-unit strings. The asset's EIP-712 name/version must be pinned; they are not accepted merely because a server proposes them. The complete policy hash scopes the journal's cumulative allowance. Replacing a policy/journal is a new owner-side authority decision, not an automatic retry mechanism.
 
 An owner wallet-provider module exports an EIP-1193 provider as `default`. Its `request({method:'eth_signTypedData_v4', params:[payer, typedDataJSON]})` operation must work under that owner's existing permission. The included wrapper has no interactive-approval or wallet-creation bypass.
 
 ```text
-WHP_BUYER_PRIVATE_KEY              Buyer's Ed25519 PKCS8 PEM
 WHP_BUYER_RPC_URL                  Buyer-trusted HTTPS chain RPC, independent of issuer output
 WHP_BUYER_MAX_WAIT_SECONDS         Explicit polling deadline; default 1800 seconds
 ```
@@ -48,7 +47,7 @@ WHP_BUYER_MAX_WAIT_SECONDS         Explicit polling deadline; default 1800 secon
 node scripts/buy.mjs policy.json submission.json owner-provider.mjs buyer-journal.sqlite received-result.json
 ```
 
-The CLI is LIVE-only and rejects TEST policies. For the no-money, no-wallet proof, use `npm run verify` instead. Production wallet signing was not invoked here. The CLI preserves the original journal and reference when it reaches a pending deadline. Retrying with the same files recovers the original authorization; it does not ask for another payment signature. The output file is created with exclusive-write semantics rather than silently overwriting an existing result.
+The CLI is LIVE-only and rejects TEST policies. For the bounded acquisition connection checks, use `npm run check:acquisition-repair` (Python verifier dependencies required); do not rerun the inherited suites. Production wallet signing was not invoked here. The CLI preserves the original journal and reference when it reaches a pending deadline. Retrying with the same files recovers the original authorization; it does not ask for another payment signature. The output file is created with exclusive-write semantics rather than silently overwriting an existing result.
 
 ## Issuer review/status administration
 

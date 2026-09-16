@@ -1,9 +1,11 @@
-import {canonical,hash,parseStrict,openSeal,publicDer,keyId,demand,encode} from './canonical.mjs';
+import {canonical,hash,parseStrict,openSeal,demand,encode} from './canonical.mjs';
 import {validateTrust,issuerAuthority} from './authority.mjs';
 import {validateSubmission} from './validation.mjs';
 import {authorizationNonce,validatePayment,EVM_ADDRESS} from './payment.mjs';
-import {clientProof,purchaseId} from './service.mjs';
 import {PROFILE_HASH} from './profile.mjs';
+
+// Frozen purchase identity; buyer_key remains public identity data, not HTTP authentication.
+const purchaseId=(s,pin)=>hash({domain:'WHP-STANDING-PURCHASE-v1',root_pin:pin,buyer_key:s.buyer_key,client_reference:s.client_reference});
 
 // Adapter for the buyer owner's EXISTING EIP-1193 spending-authorized wallet provider.
 // No wallet is created, funded, or granted authority by this module.
@@ -16,15 +18,15 @@ export function typedAuthorization(terms,authorization){return {
     TransferWithAuthorization:[{name:'from',type:'address'},{name:'to',type:'address'},{name:'value',type:'uint256'},{name:'validAfter',type:'uint256'},{name:'validBefore',type:'uint256'},{name:'nonce',type:'bytes32'}]},
   primaryType:'TransferWithAuthorization',domain:{name:terms.extra.name,version:terms.extra.version,chainId:terms.network.slice(7),verifyingContract:terms.asset},message:authorization};}
 export class StandingBuyer {
-  constructor({policy,privateKey,paymentSigner,journal,verifyResult,fetchImpl=fetch,clock=()=>Math.floor(Date.now()/1000)}){
+  constructor({policy,paymentSigner,journal,verifyResult,fetchImpl=fetch,clock=()=>Math.floor(Date.now()/1000)}){
     demand(/^https:\/\//.test(policy.origin)||(policy.environment==='TEST'&&/^http:\/\/127\.0\.0\.1:[0-9]+$/.test(policy.origin)),'BUYER_ORIGIN_INVALID');
     demand(['TEST','LIVE'].includes(policy.environment)&&/^[0-9a-f]{64}$/.test(policy.root_pin)&&policy.profile_hash===PROFILE_HASH,'BUYER_TRUST_POLICY_INVALID');
     demand(/^eip155:[1-9][0-9]*$/.test(policy.network)&&[policy.asset,policy.pay_to,policy.payer].every(a=>typeof a==='string'&&EVM_ADDRESS.test(a)),'BUYER_ASSET_POLICY_INVALID');
     demand([policy.max_per_purchase,policy.max_total].every(a=>typeof a==='string'&&/^[1-9][0-9]*$/.test(a)),'BUYER_BUDGET_REQUIRED');
     demand(typeof verifyResult==='function'&&typeof paymentSigner?.signTypedData==='function','BUYER_SIGNER_AND_INDEPENDENT_VERIFIER_REQUIRED');
-    Object.assign(this,{policy,privateKey,paymentSigner,journal,verifyResult,fetch:fetchImpl,clock});
+    Object.assign(this,{policy,paymentSigner,journal,verifyResult,fetch:fetchImpl,clock});
   }
-  async request(method,path,body='',payment=null){const headers={'content-type':'application/json','whp-client-proof':clientProof(this.privateKey,method,path,body,this.clock())};if(payment)headers['payment-signature']=encode(payment);
+  async request(method,path,body='',payment=null){const headers={'content-type':'application/json'};if(payment)headers['payment-signature']=encode(payment);
     return this.fetch(this.policy.origin+path,{method,headers,...(method!=='GET'?{body}:{}),redirect:'error',signal:AbortSignal.timeout(30000)});}
   async discover(){
     const response=await this.request('GET','/.well-known/whp-standing.json');demand(response.ok,'BUYER_DISCOVERY_UNAVAILABLE');
@@ -61,7 +63,7 @@ export class StandingBuyer {
   async retrieve(submission){const id=purchaseId(submission,this.policy.root_pin),row=this.journal.get(id);demand(row?.payment,'BUYER_PURCHASE_UNKNOWN');
     const response=await this.request('GET','/v1/purchases/'+id+'/result');if(response.status!==200)return {purchase_id:id,state:'PENDING',http_status:response.status};return this.accept(response,row);}
   async purchase(submission){
-    const s=validateSubmission(submission);demand(s.buyer_key===publicDer(this.privateKey),'BUYER_KEY_MISMATCH');
+    const s=validateSubmission(submission);
     const id=purchaseId(s,this.policy.root_pin);let row=this.journal.begin(id,s,this.policy),response;
     if(row.payment){
       // Lost-response / process-restart recovery never contacts the wallet again.
@@ -71,6 +73,7 @@ export class StandingBuyer {
         if(status.state!=='QUOTED')response=await this.request('POST','/v1/purchases/'+id+'/recover');
         else response=await this.request('POST','/v1/evaluations',canonical(s),row.payment);
       }else if(response.status===404)response=await this.request('POST','/v1/evaluations',canonical(s),row.payment);
+      else if(response.status>=500||[408,429].includes(response.status))return {purchase_id:id,state:'PENDING',http_status:response.status,additional_charge:false};
       else demand(false,'BUYER_RECOVERY_REFUSED');
     } else {
       if(!row.quote){const discovered=await this.discover();const unpaid=await this.request('POST','/v1/evaluations',canonical(s));demand(unpaid.status===402,'BUYER_QUOTE_REQUIRED');
@@ -84,6 +87,7 @@ export class StandingBuyer {
       response=await this.request('POST','/v1/evaluations',canonical(s),row.payment);
     }
     if(response.status===200)return this.accept(response,row);
+    if(response.status>=500||[408,429].includes(response.status))return {purchase_id:id,state:'PENDING',http_status:response.status,additional_charge:false};
     demand(response.status===202,'BUYER_EVALUATION_REFUSED');return {purchase_id:id,state:'PENDING',additional_charge:false};
   }
 }

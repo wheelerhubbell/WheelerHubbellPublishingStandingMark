@@ -1,14 +1,13 @@
 // Explicit invocation only. This command uses the owner's pre-authorized wallet provider.
 // No embedded wallet, default spending allowance, or automatic authority grant exists.
-import {readFile,writeFile} from 'node:fs/promises';import {resolve} from 'node:path';import {pathToFileURL} from 'node:url';import {createPrivateKey} from 'node:crypto';
+import {readFile,writeFile} from 'node:fs/promises';import {resolve} from 'node:path';import {pathToFileURL} from 'node:url';
 import {StandingBuyer,Eip1193Signer} from '../src/buyer.mjs';import {BuyerJournal} from '../src/buyer-journal.mjs';import {pythonVerifier} from '../verify/python-verifier.mjs';import {parseStrict,demand} from '../src/canonical.mjs';
 const [policyFile,submissionFile,providerFile,journalFile,outputFile]=process.argv.slice(2);
 demand(policyFile&&submissionFile&&providerFile&&journalFile&&outputFile,'Usage: node scripts/buy.mjs POLICY.json SUBMISSION.json OWNER_PROVIDER.mjs JOURNAL.sqlite OUTPUT.json');
-demand(process.env.WHP_BUYER_PRIVATE_KEY,'WHP_BUYER_PRIVATE_KEY_REQUIRED');
 const policy=parseStrict(await readFile(policyFile,'utf8')),submission=parseStrict(await readFile(submissionFile,'utf8'));
 demand(policy.environment==='LIVE','LIVE_BUYER_CLI_REQUIRES_LIVE_POLICY');demand(process.env.WHP_BUYER_RPC_URL?.startsWith('https://'),'WHP_BUYER_RPC_URL_REQUIRED');
 const provider=(await import(pathToFileURL(resolve(providerFile)).href)).default,journal=new BuyerJournal(journalFile);
-const buyer=new StandingBuyer({policy,privateKey:createPrivateKey(process.env.WHP_BUYER_PRIVATE_KEY),paymentSigner:new Eip1193Signer(provider),journal,
+const buyer=new StandingBuyer({policy,paymentSigner:new Eip1193Signer(provider),journal,
   verifyResult:pythonVerifier({rootPin:policy.root_pin,rpcUrl:process.env.WHP_BUYER_RPC_URL})});
 const deadline=Date.now()+Number(process.env.WHP_BUYER_MAX_WAIT_SECONDS??1800)*1000;
 try{for(;;){let result;try{result=await buyer.purchase(submission);}catch(e){

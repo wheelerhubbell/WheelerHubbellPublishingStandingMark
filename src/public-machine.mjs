@@ -5,6 +5,7 @@
 
 import openapiBase from '../public/openapi.json' with {type:'json'};
 import resolutionSchema from '../schemas/discovery-resolution.schema.json' with {type:'json'};
+import buyerManifest from '../public/buyer/manifest.json' with {type:'json'};
 import {canonical,parseStrict,hash,seal,decode,encode,demand,Fault,exact} from './canonical.mjs';
 import {validateSubmission} from './validation.mjs';
 import {validateTrust,issuerAuthority,authorize} from './authority.mjs';
@@ -41,6 +42,7 @@ export function publicContract(service){
   };
   c.purchase.access_sequence=['SUBMIT_VALID_REQUEST','HTTP_402','X402_PAYMENT','RESULT_OR_PENDING'];
   c.purchase.whp_buyer_signature_required=false;
+  c.purchase.buyer_client={...buyerManifest,url:service.origin+buyerManifest.path,guide_url:service.origin+'/buyer/README.md'};
   c.retrieval.lost_response='Use GET result or empty POST recovery with the durable purchase ID. Do not generate a second wallet authorization.';
   return c;
 }
@@ -184,14 +186,14 @@ function rewriteLlms(text){
 export async function publicMachineRoute(service,req){
   try{
     const u=new URL(req.url),path=u.pathname;
-    if(req.method==='POST'&&path==='/v1/evaluations')return evaluateRoute(service,req);
+    if(req.method==='POST'&&path==='/v1/evaluations')return await evaluateRoute(service,req);
     const purchase=await purchaseRoute(service,req,path);if(purchase)return purchase;
     if(req.method==='GET'&&path==='/v1/contract')return json(200,publicContract(service));
     if(req.method==='GET'&&(path==='/v1/openapi.json'||path==='/openapi.json'))return json(200,publicOpenapi(service));
     if(req.method==='GET'&&path===RESOLUTION_PATH)return json(200,publicResolution(service));
     if(path==='/mcp')return mcpRoute(service,req);
     if(req.method==='GET'&&path==='/llms.txt'){
-      const original=await service.handle(req);return new Response(rewriteLlms(await original.text()),{status:original.status,statusText:original.statusText,headers:original.headers});
+      const original=await service.handle(req);return new Response(rewriteLlms(await original.text())+'\nOwner-authorized reference buyer: '+service.origin+'/buyer/README.md (download and SHA-256 in /v1/contract purchase.buyer_client). No buyer authentication private key is required.\n',{status:original.status,statusText:original.statusText,headers:original.headers});
     }
     return null;
   }catch(e){

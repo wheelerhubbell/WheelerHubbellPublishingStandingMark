@@ -7,6 +7,8 @@
     "node": ">=22.16.0"
   },
   "scripts": {
+    "build:buyer": "node scripts/package-buyer.mjs",
+    "check:acquisition-repair": "npm run build:buyer && node --test test/acquisition-repair.test.mjs",
     "test": "node --test test/*.test.mjs",
     "verify": "node scripts/check.mjs",
     "demonstrate": "node scripts/demonstrate.mjs",
