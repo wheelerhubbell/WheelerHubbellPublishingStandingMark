@@ -14,6 +14,8 @@ import {validatePayment} from './payment.mjs';
 import {contract as legacyContract,bazaar,profilePath,SERVICE,CAPABILITY,resolution as legacyResolution} from './discovery.mjs';
 import {identity,RESOLUTION_PATH} from './protocol.mjs';
 import {validateWire} from './wire-schema.mjs';
+import {walletPayment,walletCheckout,PAYER_HEADER,WALLET_SIGNATURE_HEADER} from './wallet-checkout.mjs';
+import {EVM_ADDRESS} from './payment.mjs';
 
 const headers={'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'};
 const json=(status,body,extra={})=>new Response(canonical(body)+'\n',{status,headers:{...headers,...extra}});
@@ -42,6 +44,12 @@ export function publicContract(service){
   };
   c.purchase.access_sequence=['SUBMIT_VALID_REQUEST','HTTP_402','X402_PAYMENT','RESULT_OR_PENDING'];
   c.purchase.whp_buyer_signature_required=false;
+  c.purchase.direct_wallet={buyer_installation_required:false,guide_url:service.origin+'/direct-wallet.md',payer_header:PAYER_HEADER,signature_header:WALLET_SIGNATURE_HEADER,
+    wallet_method:'eth_signTypedData_v4',instructions_pointer:'/extensions/whp-standing/info/wallet_checkout',
+    sequence:'Submit the exact object with your existing wallet address. The 402 supplies the complete wallet request. Apply existing owner spending policy, sign that payment authorization, and resend the unchanged object with the returned wallet signature. No separate prepare endpoint, buyer login or client installation.',
+    mcp:{tool:'whp_standing_evaluation',payer_argument:'payer',signature_argument:'wallet_signature',recover_tool:'whp_standing_recover'},
+    authority:'Inspect wallet_checkout.eligibility before payment. An unadmitted source remains unadmitted; a negative assessment cannot produce a Mark.',
+    compatibility:'EIP-712/EIP-3009 EOA wallets returning 65-byte signatures; generic random-nonce x402 clients are not claimed compatible.'};
   c.purchase.buyer_client={...buyerManifest,url:service.origin+buyerManifest.path,guide_url:service.origin+'/buyer/README.md'};
   c.retrieval.lost_response='Use GET result or empty POST recovery with the durable purchase ID. Do not generate a second wallet authorization.';
   return c;
@@ -54,6 +62,9 @@ export function publicOpenapi(service){
     const op=api.paths[route][method];delete op.security;delete op.responses?.['401'];
   }
   api.paths['/v1/contract'].get.responses['200'].description='Complete schema, authority, quote binding and independent buyer payment requirements; no WHP-specific buyer signature is required to reach 402.';
+  api.paths['/v1/evaluations'].post.parameters.push(
+    {name:PAYER_HEADER,in:'header',required:false,schema:{type:'string',pattern:'^0x[0-9a-fA-F]{40}$'},description:'Existing owner-authorized wallet address. On the unpaid request, asks for a complete eth_signTypedData_v4 payment request in the same 402 response; no buyer client installation.'},
+    {name:WALLET_SIGNATURE_HEADER,in:'header',required:false,schema:{type:'string',pattern:'^0x[0-9a-fA-F]{128}(?:00|01|1[bBcC])$'},description:'The wallet payment signature returned for that 402, with PAYMENT-PAYER. Resend the original submission unchanged. Alternative to the complete base64 PAYMENT-SIGNATURE envelope; never send both.'});
   if(api.components?.securitySchemes?.ClientProof)api.components.securitySchemes.ClientProof.description='Reviewer-authentication proof for /v1/reviews only. It is not required for purchase, 402 discovery, result retrieval or recovery.';
   return api;
 }
@@ -76,7 +87,11 @@ async function evaluateRoute(service,req){
   const raw=await readBody(req),s=validateSubmission(parseStrict(raw));
   const trust=validateTrust(service.trustBundle,service.rootPin,now),issuer=issuerAuthority(service.keyId,s.bounds.scope,s.bounds.jurisdiction,trust);
   const id=purchaseId(s,service.rootPin),requestHash=hash(s);
-  const paymentHeader=req.headers.get('payment-signature'),payment=paymentHeader?decode(paymentHeader,16384):null;
+  const paymentHeader=req.headers.get('payment-signature'),walletSignature=req.headers.get(WALLET_SIGNATURE_HEADER),payer=req.headers.get(PAYER_HEADER);
+  demand(!(paymentHeader&&walletSignature),'MULTIPLE_PAYMENT_FORMATS');
+  if(payer!==null)demand(EVM_ADDRESS.test(payer),'PAYMENT_PAYER_INVALID');
+  if(walletSignature!==null)demand(payer!==null&&/^0x[0-9a-fA-F]{128}(?:00|01|1[bBcC])$/.test(walletSignature),'WALLET_SIGNATURE_INVALID');
+  let payment=paymentHeader?decode(paymentHeader,16384):null;
   const expires=Math.min(now+600,issuer.valid_until,trust.profile.valid_until,trust.bundle.status_snapshot.payload.valid_until);
   const quote=seal('WHP-STANDING-QUOTE-v1',{
     purchase_id:id,request_hash:requestHash,buyer_key:s.buyer_key,profile_hash:s.profile.sha256,issuer:trust.profile.issuer,
@@ -88,6 +103,7 @@ async function evaluateRoute(service,req){
   let row=await service.store.quote({id,buyer_key:s.buyer_key,client_reference:s.client_reference,request_hash:requestHash,state:'QUOTED',
     submission:s,quote,trust_bundle:service.trustBundle,discovery_identity:identity(service.resolutionUrl,id,service.rootPin,trust.profile.environment),created_at:now});
   if(row.state==='ISSUED')return result((await service.store.get(id)).result_bytes);
+  if(walletSignature)payment=walletPayment(row.quote,payer,walletSignature);
   if(row.state!=='QUOTED'){
     if(payment)demand(validatePayment(payment,row.quote,now,{allowExpired:true})===row.payment_key,'PURCHASE_ALREADY_BOUND',409);
     return service.progress(row);
@@ -95,7 +111,11 @@ async function evaluateRoute(service,req){
   demand(now<row.quote.payload.expires_at,'QUOTE_EXPIRED',409);
   if(!payment){
     const terms={x402Version:2,resource:row.quote.payload.resource,accepts:[row.quote.payload.payment_requirements],extensions:{'whp-standing':{info:{required:true,quote:row.quote},schema:{type:'object'}},bazaar:publicBazaar(service)}};
-    return json(402,terms,{'payment-required':encode(terms)});
+    // Keep the standard header bounded: the full wallet instructions and eligibility
+    // observation are in the body. Both carry the exact same signed quote/terms.
+    const paymentRequired=encode(terms);
+    if(payer)terms.extensions['whp-standing'].info.wallet_checkout=walletCheckout(service,row,payer,evaluate(s,row.trust_bundle,service.rootPin,now));
+    return json(402,terms,{'payment-required':paymentRequired});
   }
   const paymentKey=validatePayment(payment,row.quote,now);
   const observedBlock=await service.rail.startBlock();
@@ -130,8 +150,9 @@ const mcpObject=(properties={},required=Object.keys(properties))=>({type:'object
 const mcpString=maxLength=>({type:'string',maxLength});
 const mcpTools=[
   {name:'whp_standing_contract',description:'Discover WHP Standing: '+CAPABILITY+' Includes exact profile, schema, authority prerequisites and x402 payment contract.',inputSchema:mcpObject(),annotations:{readOnlyHint:true,idempotentHint:true,openWorldHint:false}},
-  {name:'whp_standing_evaluation',description:'Request a WHP Standing Evaluation. First call returns exact HTTP 402 payment terms. Retry with only the buyer wallet’s own authorized x402 payment signature. No WHP-specific buyer proof is required.',inputSchema:mcpObject({submission_raw:mcpString(262144),payment_signature:mcpString(24000)},['submission_raw']),annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:true}},
-  {name:'whp_standing_result',description:'Retrieve the exact original WHP Standing Mark or negative assessment bytes by durable purchase ID, without another charge or WHP-specific signature.',inputSchema:mcpObject({purchase_id:{type:'string',pattern:'^[0-9a-f]{64}$'}}),annotations:{readOnlyHint:true,idempotentHint:true,openWorldHint:false}}
+  {name:'whp_standing_evaluation',description:'Submit the exact object and your existing wallet payer address. The 402 body supplies wallet_checkout: eligibility and the complete eth_signTypedData_v4 request. Your existing authorized wallet signs the payment under owner policy; retry this tool with the unchanged submission, same payer and returned wallet_signature. No WHP client install, login or additional buyer signature. Alternatively supply a complete base64 x402 payment_signature. Never send both signature formats.',inputSchema:mcpObject({submission_raw:mcpString(262144),payment_signature:mcpString(24000),payer:{type:'string',pattern:'^0x[0-9a-fA-F]{40}$'},wallet_signature:{type:'string',pattern:'^0x[0-9a-fA-F]{128}(?:00|01|1[bBcC])$'}},['submission_raw']),annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:true}},
+  {name:'whp_standing_result',description:'Retrieve the exact original WHP Standing Mark or negative assessment bytes by durable purchase ID, without another charge or WHP-specific signature.',inputSchema:mcpObject({purchase_id:{type:'string',pattern:'^[0-9a-f]{64}$'}}),annotations:{readOnlyHint:true,idempotentHint:true,openWorldHint:false}},
+  {name:'whp_standing_recover',description:'Progress an already authorized pending purchase using its original durable payment. Supply only the purchase ID. Never sign another payment; if result retrieval says QUOTED, replay the original submission and identical saved wallet signature through whp_standing_evaluation.',inputSchema:mcpObject({purchase_id:{type:'string',pattern:'^[0-9a-f]{64}$'}}),annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:true}}
 ];
 
 async function mcpRoute(service,req){
@@ -162,13 +183,18 @@ async function mcpRoute(service,req){
     if(name==='whp_standing_contract'){exact(a,[]);const data=publicContract(service);return reply({content:[{type:'text',text:canonical(data)}],structuredContent:data});}
     let response;
     if(name==='whp_standing_evaluation'){
-      exact(a,Object.hasOwn(a,'payment_signature')?['submission_raw','payment_signature']:['submission_raw']);
+      exact(a,['submission_raw',...['payment_signature','payer','wallet_signature'].filter(k=>Object.hasOwn(a,k))]);
       demand(typeof a.submission_raw==='string'&&Buffer.byteLength(a.submission_raw)<=262144,'INPUT_INVALID');
       const h={'content-type':'application/json'};if(a.payment_signature!==undefined){demand(typeof a.payment_signature==='string'&&a.payment_signature.length<=24000,'PAYMENT_HEADER_INVALID');h['payment-signature']=a.payment_signature;}
-      response=await evaluateRoute(service,new Request(service.origin+'/v1/evaluations',{method:'POST',headers:h,body:a.submission_raw}));
+      if(a.payer!==undefined){demand(typeof a.payer==='string'&&EVM_ADDRESS.test(a.payer),'PAYMENT_PAYER_INVALID');h[PAYER_HEADER]=a.payer;}
+      if(a.wallet_signature!==undefined){demand(typeof a.wallet_signature==='string'&&a.wallet_signature.length===132,'WALLET_SIGNATURE_INVALID');h[WALLET_SIGNATURE_HEADER]=a.wallet_signature;}
+      response=await publicMachineRoute(service,new Request(service.origin+'/v1/evaluations',{method:'POST',headers:h,body:a.submission_raw}));
     }else if(name==='whp_standing_result'){
       exact(a,['purchase_id']);demand(/^[0-9a-f]{64}$/.test(a.purchase_id),'INPUT_INVALID');
       response=await purchaseRoute(service,new Request(service.origin+'/v1/purchases/'+a.purchase_id+'/result'),'/v1/purchases/'+a.purchase_id+'/result');
+    }else if(name==='whp_standing_recover'){
+      exact(a,['purchase_id']);demand(/^[0-9a-f]{64}$/.test(a.purchase_id),'INPUT_INVALID');
+      response=await publicMachineRoute(service,new Request(service.origin+'/v1/purchases/'+a.purchase_id+'/recover',{method:'POST',body:''}));
     }else return error(-32602,'Unknown tool');
     const raw=await response.text(),data={http_status:response.status,headers:Object.fromEntries([...response.headers].filter(([k])=>['payment-required','payment-response','retry-after'].includes(k))),body_bytes:raw};
     return reply({content:[{type:'text',text:canonical(data)}],structuredContent:data,isError:response.status>=400&&response.status!==402});
@@ -193,7 +219,7 @@ export async function publicMachineRoute(service,req){
     if(req.method==='GET'&&path===RESOLUTION_PATH)return json(200,publicResolution(service));
     if(path==='/mcp')return mcpRoute(service,req);
     if(req.method==='GET'&&path==='/llms.txt'){
-      const original=await service.handle(req);return new Response(rewriteLlms(await original.text())+'\nOwner-authorized reference buyer: '+service.origin+'/buyer/README.md (download and SHA-256 in /v1/contract purchase.buyer_client). No buyer authentication private key is required.\n',{status:original.status,statusText:original.statusText,headers:original.headers});
+      const original=await service.handle(req);return new Response(rewriteLlms(await original.text())+'\nDirect wallet acquisition: POST the object with PAYMENT-PAYER (or MCP payer). The 402 body supplies the exact eth_signTypedData_v4 request for your existing authorized wallet. Resend the unchanged object with PAYMENT-WALLET-SIGNATURE (or MCP wallet_signature). No WHP client install, login or separate preparation request. Check exact-object eligibility and enforce existing owner spending policy before signing. Recovery uses the original purchase ID and saved payment.\nOptional reference buyer: '+service.origin+'/buyer/README.md (download and SHA-256 in /v1/contract purchase.buyer_client).\n',{status:original.status,statusText:original.statusText,headers:original.headers});
     }
     return null;
   }catch(e){

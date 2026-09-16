@@ -9,6 +9,7 @@
   "scripts": {
     "build:buyer": "node scripts/package-buyer.mjs",
     "check:acquisition-repair": "npm run build:buyer && node --test test/acquisition-repair.test.mjs",
+    "check:direct-wallet": "node --test test/direct-wallet.test.mjs",
     "test": "node --test test/*.test.mjs",
     "verify": "node scripts/check.mjs",
     "demonstrate": "node scripts/demonstrate.mjs",
