@@ -1,4 +1,4 @@
-name: Read-only Netlify build failure evidence
+name: Read-only Netlify deployment readback
 on:
   push:
     branches: [ops/check-netlify-git-link-20260916]
@@ -10,27 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Read the exact failed build log
+      - name: Read deployment state and validate configuration without exposing values
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         run: |
           node --input-type=module <<'JS'
-          const token=process.env.NETLIFY_AUTH_TOKEN;
+          import {createPrivateKey} from 'node:crypto';
+          const token=process.env.NETLIFY_AUTH_TOKEN,site='0347a387-82b7-4b7f-b528-1024ad79b9e7';
           if(!token)throw Error('Stored Netlify credential absent');
-          function redact(text){return String(text).split(token).join('[REDACTED]').replace(/-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----/g,'[REDACTED PRIVATE KEY]').replace(/postgres(?:ql)?:\/\/[^\s"']+/g,'[REDACTED DATABASE URL]').replace(/(Bearer\s+)[A-Za-z0-9._-]+/gi,'$1[REDACTED]');}
-          const paths=[
-            '/sites/0347a387-82b7-4b7f-b528-1024ad79b9e7',
-            '/builds/6aaacd1fff6a7a00098455b0',
-            '/deploys/6aaacd1fff6a7a00098455b2/log',
-            '/builds/6aaacd1fff6a7a00098455b0/log'
-          ];
-          for(const path of paths){
-            const r=await fetch('https://api.netlify.com/api/v1'+path,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(20000),redirect:'error'});
-            console.log(JSON.stringify({read_only:true,path,status:r.status,content_type:r.headers.get('content-type')}));
-            if(!r.ok)continue;
-            const text=await r.text();
-            if(path.endsWith('/log')){console.log(redact(text).slice(-28000));continue;}
-            const data=JSON.parse(text);
-            console.log(JSON.stringify({keys:Object.keys(data),id:data.id,site_id:data.site_id,state:data.state,error:data.error,error_message:data.error_message,done:data.done,repo:data.repo?{provider:data.repo.provider,repo_path:data.repo.repo_path,repo_branch:data.repo.repo_branch,repo_url:data.repo.repo_url,cmd:data.repo.cmd,dir:data.repo.dir,stop_builds:data.repo.stop_builds}:null}));
+          async function read(path){const r=await fetch('https://api.netlify.com/api/v1'+path,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(20000),redirect:'error'});return {status:r.status,data:r.ok?await r.json():null};}
+          const vars=await read('/accounts/6aaaa6b474ff8bfac03a4352/env?site_id='+site);
+          const env={};
+          if(Array.isArray(vars.data))for(const v of vars.data){const value=v.values?.find(x=>x.context==='production')??v.values?.find(x=>x.context==='all');if(value)env[v.key]=value.value;}
+          const config={env_http_status:vars.status,managed_database_selected:env.WHP_USE_NETLIFY_DATABASE==='true'};
+          try{JSON.parse(env.WHP_PAYMENT_REQUIREMENTS_JSON);config.payment_json_valid=true;}catch{config.payment_json_valid=false;}
+          try{createPrivateKey(env.WHP_ISSUER_PRIVATE_KEY);config.issuer_private_key_parses=true;}catch{config.issuer_private_key_parses=false;}
+          console.log(JSON.stringify({read_only:true,config}));
+          const deploys=await read('/sites/'+site+'/deploys?per_page=5');
+          console.log(JSON.stringify({deploys_http_status:deploys.status,deploys:(deploys.data??[]).map(d=>({id:d.id,state:d.state,build_id:d.build_id,commit_ref:d.commit_ref,branch:d.branch,created_at:d.created_at,published_at:d.published_at,error_message:d.error_message??null}))},null,2));
+          for(const path of ['/healthz','/.well-known/whp-standing.json']){
+            const r=await fetch('https://wheeler-hubbell-publishing-standing-mark.netlify.app'+path,{signal:AbortSignal.timeout(20000),redirect:'error'});
+            const body=await r.text();
+            console.log(JSON.stringify({public_get:path,status:r.status,body:body.slice(0,7000)}));
           }
           JS
