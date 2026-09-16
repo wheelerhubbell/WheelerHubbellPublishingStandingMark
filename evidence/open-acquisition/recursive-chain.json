@@ -1,0 +1,319 @@
+{
+  "verified": true,
+  "environment": "TEST",
+  "chain": "A → Mark A → B → WHP Standing → Mark B",
+  "a": {
+    "acquired": true,
+    "environment": "TEST",
+    "root_admission": "TEST_SELF_CONSISTENCY_ONLY",
+    "institutional_authentication": false,
+    "wallet_calls": 1,
+    "encountered": null,
+    "encountered_admission": null,
+    "verification": {
+      "verified": true,
+      "cryptographic_integrity": "VERIFIED",
+      "evaluation_replay": "VERIFIED",
+      "environment": "TEST",
+      "purchase_id": "b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+      "mark_id": "WHP-SM-b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+      "assessment": "ESTABLISHED",
+      "current_standing": "ACTIVE",
+      "namespace_evidence": "Issuer-signed HTTPS observations replayed; not independent proof of historical GitHub state.",
+      "payment_chain_finality": "SIMULATED_NOT_LIVE",
+      "expires_at": 1789569397,
+      "historical_issuance": "VERIFIED",
+      "institutional_root_admission": "CALLER_SUPPLIED_PIN_REQUIRED",
+      "current_discovery": {
+        "verified": true,
+        "resolution_id": "urn:whp:standing:resolution:1",
+        "capability_id": "urn:whp:standing:capability:1",
+        "service_origin": "http://127.0.0.1:35269",
+        "observed_at": 1789568197,
+        "valid_until": 1789568497
+      },
+      "technical_live_issuance_verified": false,
+      "outside_buyer_relationship": "NOT_ESTABLISHED_BY_THIS_VERIFIER",
+      "live_completion_verified": false
+    },
+    "purchase_id": "b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+    "object_id": "a-copy",
+    "source_keys": [
+      "52e6be5a1b92b3f1d167051be9178c4a938886ae13cec1cefbbb44b02f536ad8",
+      "52e6be5a1b92b3f1d167051be9178c4a938886ae13cec1cefbbb44b02f536ad8"
+    ],
+    "trace": [
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:45991/capabilities?capability_class=urn%3Acapability%3Amachine-verifiable-standing%3A1",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/.well-known/standing-capability.json",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/v1/immutable/ab76d9b6684ed2c2f26c21888d936d3f814dbe4f2357a9bf97fe538f513a200a",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/verification/dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6.py",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/v1/contract",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/schemas/submission.schema.json",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:35269/v1/evaluations",
+        "status": 402
+      },
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:35269/v1/evaluations",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/v1/registry/b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/v1/purchases/b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663/result",
+        "status": 200
+      }
+    ],
+    "milestones": {
+      "quoted": {
+        "trace_index": 6,
+        "purchase_id": "b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663"
+      },
+      "verified_result": {
+        "trace_index": 7,
+        "purchase_id": "b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+        "mark_sha256": "611c20e3db8c276ebae3309a06332582f22f70e2ba537de4701722e5471a8d5e"
+      }
+    },
+    "production_completion": false,
+    "provider_prior_configuration": false,
+    "client": "@x402/fetch + @x402/evm",
+    "sandbox": "seccomp syscall allowlist; no filesystem opens, network or process creation; in-memory public artifacts only"
+  },
+  "b": {
+    "acquired": true,
+    "environment": "TEST",
+    "root_admission": "TEST_SELF_CONSISTENCY_ONLY",
+    "institutional_authentication": false,
+    "wallet_calls": 1,
+    "encountered": {
+      "verified": true,
+      "cryptographic_integrity": "VERIFIED",
+      "evaluation_replay": "VERIFIED",
+      "environment": "TEST",
+      "purchase_id": "b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+      "mark_id": "WHP-SM-b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+      "assessment": "ESTABLISHED",
+      "current_standing": "ACTIVE",
+      "namespace_evidence": "Issuer-signed HTTPS observations replayed; not independent proof of historical GitHub state.",
+      "payment_chain_finality": "SIMULATED_NOT_LIVE",
+      "expires_at": 1789569397,
+      "historical_issuance": "VERIFIED",
+      "institutional_root_admission": "CALLER_SUPPLIED_PIN_REQUIRED",
+      "current_discovery": {
+        "verified": true,
+        "resolution_id": "urn:whp:standing:resolution:1",
+        "capability_id": "urn:whp:standing:capability:1",
+        "service_origin": "http://127.0.0.1:35269",
+        "observed_at": 1789568199,
+        "valid_until": 1789568499
+      },
+      "technical_live_issuance_verified": false,
+      "outside_buyer_relationship": "NOT_ESTABLISHED_BY_THIS_VERIFIER",
+      "live_completion_verified": false
+    },
+    "encountered_admission": {
+      "mark_sha256": "611c20e3db8c276ebae3309a06332582f22f70e2ba537de4701722e5471a8d5e",
+      "task_sha256": "b2c809bbe853145bf621436a68cc69b3cefe501acfe4c8a8f7857c4bb313291c",
+      "verification": {
+        "verified": true,
+        "cryptographic_integrity": "VERIFIED",
+        "evaluation_replay": "VERIFIED",
+        "environment": "TEST",
+        "purchase_id": "b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+        "mark_id": "WHP-SM-b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+        "assessment": "ESTABLISHED",
+        "current_standing": "ACTIVE",
+        "namespace_evidence": "Issuer-signed HTTPS observations replayed; not independent proof of historical GitHub state.",
+        "payment_chain_finality": "SIMULATED_NOT_LIVE",
+        "expires_at": 1789569397,
+        "historical_issuance": "VERIFIED",
+        "institutional_root_admission": "CALLER_SUPPLIED_PIN_REQUIRED",
+        "current_discovery": {
+          "verified": true,
+          "resolution_id": "urn:whp:standing:resolution:1",
+          "capability_id": "urn:whp:standing:capability:1",
+          "service_origin": "http://127.0.0.1:35269",
+          "observed_at": 1789568199,
+          "valid_until": 1789568499
+        },
+        "technical_live_issuance_verified": false,
+        "outside_buyer_relationship": "NOT_ESTABLISHED_BY_THIS_VERIFIER",
+        "live_completion_verified": false
+      }
+    },
+    "verification": {
+      "verified": true,
+      "cryptographic_integrity": "VERIFIED",
+      "evaluation_replay": "VERIFIED",
+      "environment": "TEST",
+      "purchase_id": "8fb82a3a6cafa46a40be7518047fbd97f2ae3b0a2799bbd05e7194f5d32ce969",
+      "mark_id": "WHP-SM-8fb82a3a6cafa46a40be7518047fbd97f2ae3b0a2799bbd05e7194f5d32ce969",
+      "assessment": "ESTABLISHED",
+      "current_standing": "ACTIVE",
+      "namespace_evidence": "Issuer-signed HTTPS observations replayed; not independent proof of historical GitHub state.",
+      "payment_chain_finality": "SIMULATED_NOT_LIVE",
+      "expires_at": 1789569397,
+      "historical_issuance": "VERIFIED",
+      "institutional_root_admission": "CALLER_SUPPLIED_PIN_REQUIRED",
+      "current_discovery": {
+        "verified": true,
+        "resolution_id": "urn:whp:standing:resolution:1",
+        "capability_id": "urn:whp:standing:capability:1",
+        "service_origin": "http://127.0.0.1:35269",
+        "observed_at": 1789568199,
+        "valid_until": 1789568499
+      },
+      "technical_live_issuance_verified": false,
+      "outside_buyer_relationship": "NOT_ESTABLISHED_BY_THIS_VERIFIER",
+      "live_completion_verified": false
+    },
+    "purchase_id": "8fb82a3a6cafa46a40be7518047fbd97f2ae3b0a2799bbd05e7194f5d32ce969",
+    "object_id": "b-copy",
+    "source_keys": [
+      "3b0158abd40054108ea81f0f097b067f2af3b5d8a77b4ba28fe8a0374bfc3e57",
+      "3b0158abd40054108ea81f0f097b067f2af3b5d8a77b4ba28fe8a0374bfc3e57"
+    ],
+    "trace": [
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/.well-known/standing-capability.json",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/verification/dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6.py",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/v1/contract",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/v1/registry/b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/schemas/submission.schema.json",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:35269/v1/evaluations",
+        "status": 402
+      },
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:35269/v1/evaluations",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/v1/registry/8fb82a3a6cafa46a40be7518047fbd97f2ae3b0a2799bbd05e7194f5d32ce969",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/v1/purchases/8fb82a3a6cafa46a40be7518047fbd97f2ae3b0a2799bbd05e7194f5d32ce969/result",
+        "status": 200
+      }
+    ],
+    "milestones": {
+      "quoted": {
+        "trace_index": 5,
+        "purchase_id": "8fb82a3a6cafa46a40be7518047fbd97f2ae3b0a2799bbd05e7194f5d32ce969"
+      },
+      "verified_result": {
+        "trace_index": 6,
+        "purchase_id": "8fb82a3a6cafa46a40be7518047fbd97f2ae3b0a2799bbd05e7194f5d32ce969",
+        "mark_sha256": "b1a4ca0db18223ab1f3068a9038be16784703bafa1ce3b008ccd7ed6a84e3330"
+      }
+    },
+    "production_completion": false,
+    "provider_prior_configuration": false,
+    "client": "@x402/fetch + @x402/evm",
+    "sandbox": "seccomp syscall allowlist; no filesystem opens, network or process creation; in-memory public artifacts only"
+  },
+  "irrelevant_task": {
+    "acquired": false,
+    "reason": "TASK_DOES_NOT_REQUIRE_CAPABILITY",
+    "wallet_calls": 0,
+    "trace": []
+  },
+  "owner_refusal": {
+    "acquired": false,
+    "error": "Failed to create payment payload: All payment requirements were rejected by spendControls.allowedAssets maxAmountPerPayment. Raise the per-asset cap, or omit maxAmountPerPayment to allow uncapped (default assets then fall back to the top-level USD cap).",
+    "wallet_calls": 0,
+    "trace": [
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/.well-known/standing-capability.json",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/verification/dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6.py",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/v1/contract",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/v1/registry/b1fed78d284457d98ec0aafcf00aa129b14577482751af122c2648771bdd1663",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:35269/schemas/submission.schema.json",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "http://127.0.0.1:35269/v1/evaluations",
+        "status": 402
+      }
+    ]
+  },
+  "simulated_transfers": 2,
+  "independent_source_keys": true,
+  "no_source_whitelist": true,
+  "production_completion": false,
+  "live_funds": false,
+  "real_github_namespace_observation": false
+}

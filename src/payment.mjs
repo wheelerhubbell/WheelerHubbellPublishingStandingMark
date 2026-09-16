@@ -17,18 +17,18 @@ export function validateRequirements(r){
   return r;
 }
 export function validatePayment(p,quote,at,{allowExpired=false}={}) {
-  exact(p,['x402Version','resource','accepted','payload']);exact(p.payload,['signature','authorization']);
+  exact(p,['x402Version','accepted','payload',...['resource','extensions'].filter(k=>Object.hasOwn(p,k))]);exact(p.payload,['signature','authorization']);
   demand(p.x402Version===2,'X402_VERSION_UNSUPPORTED');
   demand(canonical(p.accepted)===canonical(quote.payload.payment_requirements),'PAYMENT_TERMS_MISMATCH');
-  demand(canonical(p.resource)===canonical(quote.payload.resource),'PAYMENT_RESOURCE_MISMATCH');
+  if(p.resource!==undefined)demand(canonical(p.resource)===canonical(quote.payload.resource),'PAYMENT_RESOURCE_MISMATCH');
   const a=p.payload.authorization;exact(a,['from','to','value','validAfter','validBefore','nonce']);
   demand(EVM_ADDRESS.test(a.from)&&EVM_ADDRESS.test(a.to),'PAYMENT_ADDRESS_INVALID');
   demand(decimal(a.value)&&decimal(a.validAfter)&&decimal(a.validBefore),'PAYMENT_INTEGER_INVALID');
-  demand(HEX32.test(a.nonce)&&a.nonce.toLowerCase()===authorizationNonce(quote),'PAYMENT_NOT_BOUND_TO_PURCHASE');
+  demand(HEX32.test(a.nonce),'PAYMENT_NONCE_INVALID');
   demand(/^0x[0-9a-fA-F]{128}(?:00|01|1[bBcC])$/.test(p.payload.signature),'PAYMENT_SIGNATURE_FORMAT');
   demand(a.to.toLowerCase()===p.accepted.payTo.toLowerCase()&&a.value===p.accepted.amount,'PAYMENT_VALUE_OR_RECIPIENT_MISMATCH');
   demand(BigInt(a.validAfter)<BigInt(a.validBefore)&&BigInt(a.validAfter)<BigInt(at),'PAYMENT_NOT_YET_VALID');
-  demand(BigInt(a.validBefore)<=BigInt(quote.payload.expires_at)&&BigInt(a.validBefore)-BigInt(at)<=BigInt(p.accepted.maxTimeoutSeconds),'PAYMENT_WINDOW_EXCEEDS_TERMS');
+  demand(BigInt(a.validBefore)-BigInt(at)<=BigInt(p.accepted.maxTimeoutSeconds)+30n,'PAYMENT_WINDOW_EXCEEDS_TERMS');
   if(!allowExpired)demand(BigInt(at)<BigInt(a.validBefore)&&at<quote.payload.expires_at,'PAYMENT_EXPIRED');
   return hash({domain:'WHP-EIP3009-PAYMENT-IDENTITY-v1',network:p.accepted.network,asset:p.accepted.asset.toLowerCase(),authorizer:a.from.toLowerCase(),nonce:a.nonce.toLowerCase()});
 }

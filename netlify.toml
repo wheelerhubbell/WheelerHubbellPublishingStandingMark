@@ -1,4 +1,5 @@
 [build]
+  command = "npm run check:activation && npm run check:open-acquisition"
   publish = "public"
   functions = "netlify/functions"
 
@@ -13,4 +14,6 @@
   force = true
 
 [build.environment]
+  NODE_VERSION = "24"
+  PYTHON_VERSION = "3.12"
   WHP_ORIGIN = "https://wheelerhubbellpublishingstandingmark.netlify.app"

@@ -1,4 +1,4 @@
-import value from '../profiles/structured-passage-1.0.0.json' with {type:'json'};
+import value from '../profiles/structured-passage-1.1.0.json' with {type:'json'};
 import { hash, clone } from './canonical.mjs';
 export const PROFILE_HASH = hash(value);
 export const profile = () => clone(value);

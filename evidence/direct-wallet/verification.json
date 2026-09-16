@@ -1,0 +1,22 @@
+{
+  "base_repair_commit": "8517c539344e93abf34a1e682453b1e1099467ed",
+  "targeted_checks_passed": 4,
+  "targeted_checks_failed": 0,
+  "test_wallet": "viem 2.56.3, disposable TEST EOA key",
+  "real_offchain_signatures": true,
+  "settlement": "Existing TEST rail with independent EIP-712 verification added for this test",
+  "production_deployed": false,
+  "live_wallet_used": false,
+  "live_funds_moved": false,
+  "live_mark_issued": false,
+  "outside_source_admission_created": false,
+  "inherited_suites_rerun": false,
+  "source_sha256": {
+    "src/wallet-checkout.mjs": "7bd442d6499926aae1d66dfd4e4cb3fbdc9cbc121cc74d1f52ecdb8fb10b2a65",
+    "src/public-machine.mjs": "4011de392e5dc06a9facd1c971a5cbe61f37e480def6b476e2c4f19b1576fb48",
+    "test/direct-wallet.test.mjs": "f1b9d999e08cf403f2d9c5edfc42dde247c0239de9f18e1a932af2e7ebde72f5",
+    "public/direct-wallet.md": "da55639c57677207268a5cdf4534ef56e2a3303026b6c812c9c7088905afe98b",
+    "package.json": "1ec56896ad7fe41eb517fd035baa2582ba6c9372f783b1eb2f4caf3f1af3e005",
+    "evidence/direct-wallet/targeted-tests.tap": "170559c373c7a9cb4131ea3b47c180ff8f43b5e84cf8c7024d992027ea077975"
+  }
+}

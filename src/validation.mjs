@@ -1,4 +1,5 @@
 import { demand, exact, text, array, unique, timeWindow, canonical, hash, keyObject } from './canonical.mjs';
+import {validateAuthorityRequests} from './namespace-authority.mjs';
 import { PROFILE_ID, PROFILE_VERSION, PROFILE_HASH, OPERATIONS } from './profile.mjs';
 export const HASH_RE = /^[0-9a-f]{64}$/;
 const digest = (s,p='$') => demand(typeof s==='string' && HASH_RE.test(s),'HASH_INVALID',400,p);
@@ -11,10 +12,10 @@ export function envelopeShape(e,p,type) {
   demand(/^[A-Za-z0-9+/]{86}==$/.test(e.signature)&&Buffer.from(e.signature,'base64').toString('base64')===e.signature,'SIGNATURE_FORMAT_INVALID',400,p+'.signature');
 }
 export function validateSubmission(s) {
-  canonical(s,16); exact(s,['version','client_reference','buyer_key','profile','object','bounds','requested_operation','nodes','transitions']);
-  demand(s.version==='WHP-STANDING-SUBMISSION-v1','VERSION_UNSUPPORTED');
-  demand(typeof s.client_reference==='string' && /^[A-Za-z0-9_-]{16,96}$/.test(s.client_reference),'CLIENT_REFERENCE_INVALID');
-  keyObject(s.buyer_key);
+  canonical(s,16); exact(s,['version','client_reference','authority','profile','object','bounds','requested_operation','nodes','transitions']);
+  demand(s.version==='WHP-STANDING-SUBMISSION-v1.1','VERSION_UNSUPPORTED');
+  demand(typeof s.client_reference==='string' && /^[0-9a-f]{64}$/.test(s.client_reference),'CLIENT_REFERENCE_INVALID');
+  validateAuthorityRequests(s.authority);
   exact(s.profile,['id','version','sha256']);
   demand(s.profile.id===PROFILE_ID && s.profile.version===PROFILE_VERSION && s.profile.sha256===PROFILE_HASH,'PROFILE_UNSUPPORTED');
   exact(s.object,['id','version','root']); text(s.object.id); text(s.object.version); digest(s.object.root);

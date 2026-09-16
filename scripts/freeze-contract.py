@@ -10,7 +10,7 @@ def canonical(x):
 def h(x):return hashlib.sha256(x).hexdigest()
 def load(p):return json.loads((R/p).read_text())
 check='--check' in sys.argv
-profile=load('profiles/structured-passage-1.0.0.json');schemas={k:load('schemas/'+v+'.schema.json') for k,v in [('result','result'),('resolution','discovery-resolution')]}
+profile=load('profiles/structured-passage-1.1.0.json');schemas={k:load('schemas/'+v+'.schema.json') for k,v in [('result','result'),('resolution','discovery-resolution')]}
 manifest={**load('contracts/manifest-template.json'),'schema_sha256':h(canonical(schemas['result']).encode())}
 ch=h(canonical(manifest).encode());ph=h(canonical(profile).encode())
 code=(R/'verify/verify_mark.py').read_text()
@@ -19,13 +19,7 @@ code=re.sub(r"^CONTRACT_HASH = .*",'CONTRACT_HASH = '+repr(ch),code,flags=re.M)
 code=re.sub(r"^WIRE_SCHEMAS_B64 = .*",'WIRE_SCHEMAS_B64 = '+repr(base64.b64encode(zlib.compress(canonical(schemas).encode(),9)).decode()),code,flags=re.M)
 source_hash=h(code.encode());path='/verification/'+source_hash+'.py'
 values={'public/contract.json':json.dumps(manifest,ensure_ascii=False,indent=2)+'\n','verify/verify_mark.py':code,'public/verifier-manifest.json':json.dumps({'sha256':source_hash,'path':path,'contract_hash':ch,'schema_sha256':manifest['schema_sha256']},indent=2)+'\n','public'+path:code}
-for previous in (R/'public/verification').glob('*.py'):
-    if previous.name!=source_hash+'.py':
-        if check:raise AssertionError('ALTERNATE_PUBLIC_VERIFIER: '+previous.name)
-        archive=R/'evidence/development/contract-transition-verifiers'/previous.name
-        archive.parent.mkdir(parents=True,exist_ok=True)
-        if not archive.exists():archive.write_bytes(previous.read_bytes())
-        previous.unlink()
+# Historical hash-addressed verifier files remain immutable and publicly available.
 for name,text in values.items():
     p=R/name
     if check:assert p.is_file() and p.read_text()==text,'UNFROZEN_CONTRACT: '+name
