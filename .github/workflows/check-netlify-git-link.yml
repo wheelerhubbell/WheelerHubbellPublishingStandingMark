@@ -1,4 +1,4 @@
-name: Read-only exact Netlify build diagnosis
+name: Read-only Git production deployment evidence
 on:
   push:
     branches: [ops/check-netlify-git-link-20260916]
@@ -8,58 +8,66 @@ permissions:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: e9033a5080b2df97cfdbeba5cbd3e688e8039427
-          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Read-only source activation check
-        run: node scripts/check-activation.mjs
-        continue-on-error: true
-      - name: Read actual build log and validate environment without disclosing values
+      - name: Observe exact Git deploy and collect nonsecret evidence
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         run: |
           node --input-type=module <<'JS'
-          import {createPrivateKey,createPublicKey} from 'node:crypto';
-          import {readFile} from 'node:fs/promises';
-          const token=process.env.NETLIFY_AUTH_TOKEN,site='0347a387-82b7-4b7f-b528-1024ad79b9e7',deploy='6aaace7ee28bf30008dfcd4c';
+          import {writeFile} from 'node:fs/promises';
+          const token=process.env.NETLIFY_AUTH_TOKEN,site='0347a387-82b7-4b7f-b528-1024ad79b9e7',commit='0361bd9d011582290cd544908d5065e23990baf1';
           if(!token)throw Error('Stored Netlify credential absent');
           const sensitive=[token];
           function redact(text){let s=String(text);for(const value of sensitive)if(value)s=s.split(value).join('[REDACTED]');return s.replace(/-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----/g,'[REDACTED PRIVATE KEY]').replace(/postgres(?:ql)?:\/\/[^\s"']+/g,'[REDACTED DATABASE URL]');}
-          async function read(path){const r=await fetch('https://api.netlify.com/api/v1'+path,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000),redirect:'error'});return {status:r.status,data:r.ok?await r.json():null};}
-          const siteResult=await read('/sites/'+site);
-          const s=siteResult.data??{};
-          let vars=await read('/sites/'+site+'/env?context_name=production');
-          if(vars.status!==200&&(s.account_id||s.account_slug))vars=await read('/accounts/'+encodeURIComponent(s.account_id??s.account_slug)+'/env?site_id='+site);
-          console.log(JSON.stringify({read_only:true,env_http_status:vars.status}));
-          if(Array.isArray(vars.data)){
-            const env={};for(const v of vars.data){const value=v.values?.find(x=>x.context==='production')??v.values?.find(x=>x.context==='all');if(value)env[v.key]=value.value;}
-            sensitive.push(env.WHP_ISSUER_PRIVATE_KEY,env.DATABASE_URL,env.NETLIFY_DB_URL);
-            const config={managed_database_selected:env.WHP_USE_NETLIFY_DATABASE==='true',present_keys:Object.keys(env)};
-            try{JSON.parse(env.WHP_PAYMENT_REQUIREMENTS_JSON);config.payment_json_valid=true;}catch{config.payment_json_valid=false;}
-            try{const key=createPrivateKey(env.WHP_ISSUER_PRIVATE_KEY);config.issuer_private_key_parses=true;const pub=createPublicKey(key).export({type:'spki',format:'der'}).toString('base64');const root=JSON.parse(await readFile('public/authority/root.json','utf8'));config.issuer_key_matches_authority=root.trust_bundle.certificates.some(c=>c.payload.public_key===pub);}catch{config.issuer_private_key_parses=false;}
-            console.log(JSON.stringify(config));
+          async function read(path){const r=await fetch('https://api.netlify.com/api/v1'+path,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000),redirect:'error'});if(!r.ok)throw Error('Netlify read HTTP '+r.status);return r.json();}
+          let deploy;
+          for(let i=0;i<18;i++){
+            const ds=await read('/sites/'+site+'/deploys?per_page=10');deploy=ds.find(d=>d.commit_ref===commit);
+            if(deploy&&['ready','error','rejected','cancelled'].includes(deploy.state))break;
+            await new Promise(r=>setTimeout(r,5000));
           }
-          const url=new URL('https://app.netlify.com/access-control/generate-access-control-token');url.searchParams.set('site_id',site);url.searchParams.set('deploy_id',deploy);
-          const auth=await fetch(url,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000),redirect:'error'});
-          console.log(JSON.stringify({log_access_http_status:auth.status}));
-          if(auth.ok){
-            const a=await auth.json();const access=a.accessControlToken;
-            if(!access){console.log(JSON.stringify({log_token_missing:true,response_keys:Object.keys(a)}));process.exit(1);}
-            sensitive.push(access);
-            await new Promise(resolve=>{
-              const ws=new WebSocket('wss://socketeer.services.netlify.com/build/logs');let idle;let messages=0;let done=false;
-              function finish(){if(done)return;done=true;clearTimeout(idle);clearTimeout(deadline);ws.close();console.log(JSON.stringify({build_log_messages:messages}));resolve();}
-              const deadline=setTimeout(finish,30000);
-              ws.addEventListener('open',()=>ws.send(JSON.stringify({access_token:access,site_id:site,deploy_id:deploy})));
-              ws.addEventListener('message',event=>{messages++;console.log(redact(event.data));clearTimeout(idle);idle=setTimeout(finish,5000);});
-              ws.addEventListener('error',()=>{console.log(JSON.stringify({build_log_connection_error:true}));finish();});
-              ws.addEventListener('close',finish);
-            });
+          const report={checked_at:new Date().toISOString(),read_only:true,source_commit:commit,site_id:site,payment_executed:false,deploy:deploy?{id:deploy.id,build_id:deploy.build_id,state:deploy.state,commit_ref:deploy.commit_ref,published_at:deploy.published_at??null}:null};
+          console.log(JSON.stringify(report));
+          if(deploy){
+            const url=new URL('https://app.netlify.com/access-control/generate-access-control-token');url.searchParams.set('site_id',site);url.searchParams.set('deploy_id',deploy.id);
+            const auth=await fetch(url,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000),redirect:'error'});
+            report.log_access_http_status=auth.status;
+            if(auth.ok){
+              const a=await auth.json(),access=a.accessControlToken;sensitive.push(access);
+              if(access){
+                const lines=[];
+                await new Promise(resolve=>{
+                  const ws=new WebSocket('wss://socketeer.services.netlify.com/build/logs');let idle,done=false;
+                  function finish(){if(done)return;done=true;clearTimeout(idle);clearTimeout(deadline);ws.close();resolve();}
+                  const deadline=setTimeout(finish,30000);
+                  ws.addEventListener('open',()=>ws.send(JSON.stringify({access_token:access,site_id:site,deploy_id:deploy.id})));
+                  ws.addEventListener('message',event=>{for(const part of String(event.data).split('\n')){if(!part.trim())continue;try{const e=JSON.parse(part);lines.push(redact(e.message??''));}catch{lines.push('[non-JSON log event]');}}clearTimeout(idle);idle=setTimeout(finish,4000);});
+                  ws.addEventListener('error',()=>{report.log_connection_error=true;finish();});ws.addEventListener('close',finish);
+                });
+                report.build_log_messages=lines.length;
+                report.relevant_build_log=lines.filter(x=>/activation_authority_verified|deployment_|error|Error|failed|Failed|pass |fail |tests |subtests|Subtest|completed|published|Published|live_|WHP_USE_NETLIFY_DATABASE|42501|permission|read.only/i.test(x));
+                await writeFile('netlify-build.log',lines.join('\n')+'\n');
+              }
+            }
           }
+          report.public_reads=[];
+          for(const path of ['/healthz','/.well-known/whp-standing.json']){
+            const r=await fetch('https://wheeler-hubbell-publishing-standing-mark.netlify.app'+path,{signal:AbortSignal.timeout(15000),redirect:'error'});
+            const raw=await r.text();let data;try{data=JSON.parse(raw);}catch{data={parse_error:true};}
+            report.public_reads.push({path,status:r.status,service:data.service,version:data.version,environment:data.environment,root_pin:data.root_pin,evaluation_url:data.evaluation_url,live_completion_proven:data.live_completion_proven});
+          }
+          await writeFile('deployment-readback.json',JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify(report,null,2));
           JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: exact-git-production-deployment-evidence
+          path: |
+            deployment-readback.json
+            netlify-build.log
+          if-no-files-found: error
