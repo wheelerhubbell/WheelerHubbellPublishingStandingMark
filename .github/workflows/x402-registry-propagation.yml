@@ -9,38 +9,31 @@ permissions:
   contents: read
 
 jobs:
-  register:
+  inspect-x402scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Submit WHP Standing evaluation endpoint to x402dash
+      - name: Inspect public x402scan registration client
         shell: bash
         run: |
           set -euo pipefail
-          endpoint='https://wheelerhubbellpublishingstandingmark.netlify.app/v1/evaluations'
-          payload=$(cat <<'JSON'
-          {
-            "url": "https://wheelerhubbellpublishingstandingmark.netlify.app/v1/evaluations",
-            "name": "WHP Standing",
-            "description": "Machine-verifiable standing under explicit authority and bounds. Submit a structured object/provenance graph; receive x402 payment terms, then a durable independently verifiable WHP Standing Mark or bounded negative assessment.",
-            "tags": ["ai-agents", "x402", "provenance", "authority", "machine-verifiable-standing", "decision-integrity"],
-            "contact": "https://github.com/wheelerhubbell/WheelerHubbellPublishingStandingMark"
-          }
-          JSON
-          )
-          status=$(curl --fail-with-body -sS -o response.json -w '%{http_code}' \
-            -X POST 'https://api.x402dash.com/v1/register' \
-            -H 'content-type: application/json' \
-            --data "$payload" || true)
-          echo "HTTP_STATUS=$status"
-          cat response.json || true
-          echo
-          node - <<'NODE'
-          const fs=require('fs');
-          const status=process.env.STATUS;
-          NODE
-          if [ "$status" -ge 200 ] && [ "$status" -lt 300 ]; then
-            echo 'REGISTRATION_ACCEPTED=true'
-          else
-            echo 'REGISTRATION_ACCEPTED=false'
-            exit 1
-          fi
+          base='https://www.x402scan.com'
+          curl -fsSL "$base/resources/register" -o page.html
+          python - <<'PY'
+          import re, urllib.parse
+          html=open('page.html',encoding='utf-8').read()
+          srcs=re.findall(r'<script[^>]+src=["\']([^"\']+\.js[^"\']*)',html)
+          with open('scripts.txt','w') as f:
+              for s in srcs:
+                  f.write(urllib.parse.urljoin('https://www.x402scan.com/resources/register',s)+'\n')
+          print('SCRIPT_COUNT',len(srcs))
+          PY
+          : > candidates.txt
+          i=0
+          while IFS= read -r url; do
+            i=$((i+1))
+            file="chunk-$i.js"
+            curl -fsSL "$url" -o "$file" || continue
+            grep -aoE '.{0,140}(discoverOriginSchema|resources/register|registerOrigin|register|/api/[A-Za-z0-9_?=&./:{}-]+).{0,220}' "$file" >> candidates.txt || true
+          done < scripts.txt
+          echo '--- REGISTRATION CLIENT CANDIDATES ---'
+          sed -n '1,240p' candidates.txt
