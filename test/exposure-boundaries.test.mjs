@@ -30,7 +30,7 @@ test('MCP exposes and reads bounded resources through the same canonical routes'
 });
 test('discovery entrypoints link to the new surfaces without exposing private results',async()=>{
  for(const path of ['/llms.txt','/sitemap.xml']){const body=await (await discoveryRoute(service,new Request(origin+path))).text();for(const target of exposurePaths.slice(0,2))assert.ok(body.includes(origin+target));assert.ok(!body.includes('/v1/purchases/'));}
- const metadata=await (await discoveryRoute(service,new Request(origin+'/server.json'))).json();assert.match(metadata.repository.url,/WheelerHubbellPublishingStandingMark$/);
+ const metadata=await (await discoveryRoute(service,new Request(origin+'/server.json'))).json();assert.match(metadata.repository.url,/WheelerHubbellPublishingStandingMark$/);assert.ok(metadata.description.length<=100);
  assert.match(exposureLinks(origin),/rel="api-catalog"/);assert.match(exposureLinks(origin),/recursive-use/);
 });
 test('frozen profile, Mark contract and verifier bytes remain unchanged',async()=>{assert.equal((await verifySourceCommitments()).contract_regenerated,false);});

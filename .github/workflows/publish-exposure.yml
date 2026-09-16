@@ -38,7 +38,10 @@ jobs:
           for(let attempt=0;attempt<30;attempt++){
             try {
               const r=await fetch(process.env.WHP_ORIGIN+'/discovery/applicability.json',{signal:AbortSignal.timeout(15000)});
-              if(r.ok&&(await r.json()).contexts?.length===13)process.exit(0);
+              if(r.ok&&(await r.json()).contexts?.length===13){
+                const s=await fetch(process.env.WHP_ORIGIN+'/server.json',{signal:AbortSignal.timeout(15000)});
+                if(s.ok&&(await s.json()).description==='Verify signed JSON provenance and bounds through COPY/COMPOSE. Payment does not guarantee a Mark.')process.exit(0);
+              }
             }catch{}
             await new Promise(resolve=>setTimeout(resolve,10000));
           }
