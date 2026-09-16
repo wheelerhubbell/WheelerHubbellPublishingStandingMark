@@ -103,6 +103,8 @@ export function bazaar(service){return {
 };}
 const response=(body,type='application/json',method='GET',extra={})=>new Response(method==='HEAD'?null:typeof body==='string'?body:canonical(body)+'\n',{status:200,headers:{'content-type':type,'cache-control':'no-store','x-content-type-options':'nosniff',...extra}});
 export async function discoveryRoute(service,req){const o=service.origin,u=new URL(req.url),p=u.pathname;if(!['GET','HEAD'].includes(req.method))return null;
+  if(p==='/openapi.json')return response(currentOpenapi(service),'application/json',req.method);
+  if(p==='/.well-known/x402')return response({version:1,resources:[o+'/v1/evaluations'],name:SERVICE,description:CAPABILITY,homepage:o,repository:'https://github.com/wheelerhubbell/WheelerHubbellPublishingStandingMark',machineReadable:{openapi:o+'/v1/openapi.json',contract:o+'/v1/contract',llmsTxt:o+'/llms.txt',applicability:o+'/discovery/applicability.json'},mcp:{remoteConnector:o+'/mcp'},payment:{protocol:'x402-v2',requirements:service.requirements,required_extension:'whp-standing',generic_random_nonce_client_compatible:false,prerequisites_url:o+'/v1/contract'},registration_claim:'Self-published discovery only; external acceptance is separately evidenced.'},'application/json',req.method);
   if(p==='/discovery/applicability.json')return response(applicability(o),'application/json',req.method);
   if(p==='/discovery/recursive-use.json')return response(recursiveUse(o),'application/json',req.method);
   if(p==='/v1/profiles')return response({profiles:[{id:PROFILE_ID,version:PROFILE_VERSION,sha256:PROFILE_HASH,url:o+profilePath}]},'application/json',req.method);

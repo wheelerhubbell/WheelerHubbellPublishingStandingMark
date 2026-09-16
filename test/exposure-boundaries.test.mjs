@@ -34,3 +34,9 @@ test('discovery entrypoints link to the new surfaces without exposing private re
  assert.match(exposureLinks(origin),/rel="api-catalog"/);assert.match(exposureLinks(origin),/recursive-use/);
 });
 test('frozen profile, Mark contract and verifier bytes remain unchanged',async()=>{assert.equal((await verifySourceCommitments()).contract_regenerated,false);});
+test('x402 discovery advertises the actual gated resource, not generic buyer compatibility',async()=>{
+ const s={origin,requirements:{scheme:'exact',amount:'1000000'}};
+ const a=await (await discoveryRoute(s,new Request(origin+'/.well-known/x402'))).json();
+ assert.deepEqual(a.resources,[origin+'/v1/evaluations']);assert.equal(a.payment.generic_random_nonce_client_compatible,false);assert.deepEqual(a.payment.requirements,s.requirements);
+ const b=await (await discoveryRoute(s,new Request(origin+'/openapi.json'))).json();assert.equal(b.servers[0].url,origin);
+});
