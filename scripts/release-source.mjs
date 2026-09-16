@@ -12,7 +12,8 @@ const files=['package.json','package-lock.json','netlify.toml','requirements-ver
   'public/examples/submission.TEST.json','public/buyer/manifest.json',
   'scripts/cold-purchaser.mjs','scripts/run-live-chain.mjs','scripts/check-live-chain.mjs','scripts/release-source.mjs',
   'scripts/public-artifact-sandbox.py','scripts/check-activation.mjs','scripts/package-buyer.mjs',
-  'scripts/freeze-contract.py','scripts/generate-schemas.py','scripts/check-schemas.py'];
+  'scripts/freeze-contract.py','scripts/generate-schemas.py','scripts/check-schemas.py',
+  'scripts/open-authority-administration.mjs','scripts/netlify-production-target.mjs'];
 
 export async function releaseSource(directory=root){
   const base=resolve(directory),paths=[...files];
