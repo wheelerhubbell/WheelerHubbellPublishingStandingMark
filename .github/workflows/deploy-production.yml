@@ -1,26 +1,6 @@
-name: Production authority administration
+name: Historical production authority administration (manual only)
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - 'netlify/**'
-      - 'public/**'
-      - 'profiles/**'
-      - 'schemas/**'
-      - 'contracts/**'
-      - 'verify/**'
-      - 'scripts/open-authority-administration.mjs'
-      - 'scripts/observe-authority-deployment.mjs'
-      - 'scripts/check-activation.mjs'
-      - 'netlify.toml'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'requirements*.txt'
-      - '.github/workflows/deploy-production.yml'
-  schedule:
-    - cron: '17 */6 * * *'
 permissions:
   contents: write
 concurrency:

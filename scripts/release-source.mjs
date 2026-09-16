@@ -11,7 +11,7 @@ const files=['package.json','package-lock.json','netlify.toml','requirements.txt
   'contracts/manifest-template.json','public/contract.json','public/verifier-manifest.json','public/openapi.json',
   'public/examples/submission.TEST.json','public/buyer/manifest.json',
   'scripts/cold-purchaser.mjs','scripts/run-live-chain.mjs','scripts/check-live-chain.mjs','scripts/release-source.mjs',
-  'scripts/public-artifact-sandbox.py','scripts/check-activation.mjs','scripts/package-buyer.mjs',
+  'scripts/public-artifact-sandbox.py','scripts/check-activation.mjs','scripts/check-deployment.mjs','scripts/package-buyer.mjs',
   'scripts/freeze-contract.py','scripts/generate-schemas.py','scripts/check-schemas.py',
   'scripts/open-authority-administration.mjs','scripts/netlify-production-target.mjs',
   'scripts/observe-authority-deployment.mjs','.github/workflows/deploy-production.yml'];

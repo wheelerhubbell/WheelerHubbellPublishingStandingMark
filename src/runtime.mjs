@@ -7,7 +7,10 @@ import {StandingService} from './service.mjs';
 import {validateTrust,issuerAuthority} from './authority.mjs';
 import {keyId,publicDer} from './canonical.mjs';
 import {livePaymentDestination,bazaar} from './discovery.mjs';
+import publishedAuthority from '../public/authority/root.json' with {type:'json'};
 export async function runtimeFromEnvironment(env=process.env){
+  env={...env,WHP_ORIGIN:env.WHP_ORIGIN??env.URL,WHP_ROOT_PIN:env.WHP_ROOT_PIN??publishedAuthority.root_pin,
+    WHP_TRUST_BUNDLE_JSON:env.WHP_TRUST_BUNDLE_JSON??(env.WHP_TRUST_BUNDLE_FILE?undefined:JSON.stringify(publishedAuthority.trust_bundle))};
   for(const name of ['WHP_ORIGIN','WHP_ROOT_PIN','WHP_ISSUER_PRIVATE_KEY','WHP_FACILITATOR_URL','WHP_RPC_URL'])demand(env[name],'CONFIG_'+name+'_REQUIRED',503);
   demand(env.WHP_TRUST_BUNDLE_JSON||env.WHP_TRUST_BUNDLE_FILE,'CONFIG_WHP_TRUST_BUNDLE_REQUIRED',503);
   demand(env.WHP_PAYMENT_REQUIREMENTS_JSON||env.WHP_PAYMENT_REQUIREMENTS_FILE,'CONFIG_WHP_PAYMENT_REQUIREMENTS_REQUIRED',503);

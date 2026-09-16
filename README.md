@@ -9,3 +9,5 @@ A public GitHub repository controller can supply exact source and transformation
 `npm run check:open-acquisition` enforces the full A-to-B chain in clean processes using the real standard x402 client, plus negative and recovery gates. Deployment requires that gate and matching existing-root authorization. After deployment, `npm run check:release` additionally requires verified LIVE chain evidence and fails when it is missing. Deploying the service enables that real execution; deployment alone does not establish production completion.
 
 Read [the exact v1.1 contract and evidence boundaries](docs/OPEN-ACQUISITION-v1.1.md), [namespace admission](public/namespace-authority.md), and [the optional reference buyer](public/buyer/README.md). Historical v1 contracts, verifier bytes and evidence retain their original scope under `docs/contracts`, hash-addressed public artifacts, and `legacy/v1`.
+
+For the authorized move to a new Netlify account, see [manual deployment and required account configuration](docs/MANUAL-NETLIFY-DEPLOY.md). GitHub changes alone do not install the existing private key or provision the new database.
