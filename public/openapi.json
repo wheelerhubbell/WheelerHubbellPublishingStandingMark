@@ -12,6 +12,39 @@
     }
   ],
   "paths": {
+    "/.well-known/agent-card.json": {
+      "get": {
+        "operationId": "getStandingCarrierAgentCard",
+        "responses": {
+          "200": {
+            "description": "A2A v1 Agent Card for the transparent transport-only WHP Standing carrier."
+          }
+        }
+      }
+    },
+    "/a2a": {
+      "post": {
+        "operationId": "sendMessageToStandingCarrier",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A2A SendMessage response carrying exact Mark bytes and canonical routes."
+          },
+          "503": {
+            "description": "The exact immutable Mark artifact was unavailable or failed its committed SHA-256 check."
+          }
+        }
+      }
+    },
     "/.well-known/whp-standing.json": {
       "get": {
         "operationId": "discoverStanding",

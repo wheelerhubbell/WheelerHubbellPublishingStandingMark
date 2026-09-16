@@ -14,6 +14,7 @@ import { validatePayment, validateRequirements, HEX32 } from './payment.mjs';
 import {discoveryRoute,contract,profilePath,livePaymentDestination,bazaar} from './discovery.mjs';
 import {identity,RESOLUTION_PATH} from './protocol.mjs';
 import {mcpRoute} from './mcp.mjs';
+import {a2aRoute} from './carrier.mjs';
 
 const headers={'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'};
 const json=(status,body,extra={})=>new Response(canonical(body)+'\n',{status,headers:{...headers,...extra}});
@@ -54,6 +55,7 @@ export class StandingService {
   }}
   async route(req){const u=new URL(req.url),now=this.clock(),path=u.pathname;
     const discovered=await discoveryRoute(this,req);if(discovered)return discovered;
+    if(path==='/a2a')return a2aRoute(this.origin,req);
     if(path==='/mcp')return mcpRoute(this,req);
     if(req.method==='GET'&&['/schemas/submission.schema.json','/schemas/result.schema.json','/schemas/trust-bundle.schema.json','/schemas/payment-requirements.schema.json'].includes(path)){
       return json(200,publicSchemas[path]);}

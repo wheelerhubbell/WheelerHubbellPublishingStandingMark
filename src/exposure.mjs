@@ -38,5 +38,5 @@ export function recursiveUse(origin){return {
   payment_compatibility:'Generic random-nonce x402 clients are insufficient; implement the whp-standing exact-quote binding in the canonical contract.',
   observed_recursive_acquisition:false,evidence_scope:'Published traversal instructions, not an observed independent encounter or sale.'
 };}
-export const exposurePaths=['/discovery/applicability.json','/discovery/recursive-use.json','/discovery/capability.json','/discovery/provider-index.json','/.well-known/standing-capability.json','/.well-known/api-catalog','/server.json','/llms.txt','/.well-known/x402','/openapi.json'];
-export function exposureLinks(origin){return '<'+origin+'/.well-known/api-catalog>; rel="api-catalog", <'+origin+'/v1/openapi.json>; rel="service-desc"; type="application/json", <'+origin+'/discovery/recursive-use.json>; rel="describedby"; type="application/json"';}
+export const exposurePaths=['/discovery/applicability.json','/discovery/recursive-use.json','/discovery/capability.json','/discovery/provider-index.json','/.well-known/standing-capability.json','/.well-known/agent-card.json','/.well-known/api-catalog','/server.json','/llms.txt','/.well-known/x402','/openapi.json'];
+export function exposureLinks(origin){return '<'+origin+'/.well-known/api-catalog>; rel="api-catalog", <'+origin+'/v1/openapi.json>; rel="service-desc"; type="application/json", <'+origin+'/.well-known/agent-card.json>; rel="describedby"; type="application/json", <'+origin+'/discovery/recursive-use.json>; rel="describedby"; type="application/json"';}
