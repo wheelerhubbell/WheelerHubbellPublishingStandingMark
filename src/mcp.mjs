@@ -26,7 +26,7 @@ export async function mcpRoute(service,req){
     if(msg.method==='initialize')return reply({protocolVersion:VERSIONS.includes(msg.params?.protocolVersion)?msg.params.protocolVersion:VERSIONS[0],capabilities:{tools:{listChanged:false},resources:{subscribe:false,listChanged:false}},serverInfo:{name:SERVICE,version:'1.0.0'},instructions:'Read the WHP Standing contract before any evaluation. This server never holds buyer wallet keys or grants spending authority.'});
     if(msg.method==='ping')return reply({});
     if(msg.method==='tools/list')return reply({tools});
-    const resources=[['/v1/contract','WHP Standing Evaluation contract'],[profilePath,'WHP Standing Profile'],['/v1/verification','WHP Standing Mark independent verification']].map(([p,name])=>({uri:service.origin+p,name,mimeType:'application/json'}));
+    const resources=[['/v1/contract','WHP Standing Evaluation contract'],[profilePath,'WHP Standing Profile'],['/v1/verification','WHP Standing Mark independent verification'],['/discovery/applicability.json','Bounded applicability and recovered domain vocabulary'],['/discovery/recursive-use.json','Caller-controlled Mark handoff and cold interpretation'],['/discovery/provider-index.json','Self-published capability catalog']].map(([p,name])=>({uri:service.origin+p,name,mimeType:'application/json'}));
     if(msg.method==='resources/list')return reply({resources});
     if(msg.method==='resources/read'){
       const uri=msg.params?.uri;if(!resources.some(r=>r.uri===uri))return error(-32002,'Resource not found');
