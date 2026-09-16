@@ -1,6 +1,15 @@
 name: Production authority administration
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'netlify/**'
+      - 'netlify.toml'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy-production.yml'
   schedule:
     - cron: '17 */6 * * *'
 permissions:
@@ -15,6 +24,7 @@ jobs:
     timeout-minutes: 15
     env:
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: '813ee022-f4d9-4d8e-a974-86158583a39f'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,6 +41,9 @@ jobs:
       - name: Renew only the current signed trust epoch
         if: github.event_name == 'schedule'
         run: node scripts/refresh-live-status.mjs
+      - name: Deploy current production source to the existing Netlify site
+        if: github.event_name == 'push'
+        run: npx -y netlify-cli@latest deploy --prod --build --site "$NETLIFY_SITE_ID"
       - name: Publish one coherent authority commit without forcing
         id: publication
         run: |
