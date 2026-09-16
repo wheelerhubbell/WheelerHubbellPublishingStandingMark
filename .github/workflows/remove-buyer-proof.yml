@@ -1,0 +1,127 @@
+name: Remove WHP buyer proof from acquisition boundary
+
+on:
+  push:
+    branches:
+      - remove-buyer-proof-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.head_commit.message == 'repair: remove WHP buyer proof from acquisition boundary'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: remove-buyer-proof-20260916
+          fetch-depth: 0
+
+      - name: Apply exact live-interface correction
+        shell: python
+        run: |
+          from pathlib import Path
+          import json
+
+          def replace_exact(path, old, new):
+              p=Path(path); s=p.read_text()
+              if old not in s:
+                  raise SystemExit(f'expected source fragment missing: {path}: {old[:120]!r}')
+              if s.count(old) != 1:
+                  raise SystemExit(f'expected exactly one source fragment: {path}: count={s.count(old)}')
+              p.write_text(s.replace(old,new))
+
+          # The acquisition request is structurally validated, then goes directly to quote/402.
+          replace_exact('src/service.mjs',
+            "const raw=await readBody(req),s=validateSubmission(parseStrict(raw));authenticate(req,s.buyer_key,raw,now);\n      // Pure structural validation, client authentication and issuer authority precede all storage/payment calls.",
+            "const raw=await readBody(req),s=validateSubmission(parseStrict(raw));\n      // Pure structural validation and issuer authority precede all storage/payment calls. No WHP-specific buyer signature is required to reach the x402 boundary.")
+
+          # Durable result/recovery is possession-of-purchase-id, not a second signing ceremony.
+          replace_exact('src/service.mjs',
+            "const row=await this.store.get(purchase[1]);demand(row,'PURCHASE_NOT_FOUND',404);authenticate(req,row.buyer_key,'',now);\n      if(row.state==='ISSUED')return result(row.result_bytes);",
+            "const row=await this.store.get(purchase[1]);demand(row,'PURCHASE_NOT_FOUND',404);\n      if(row.state==='ISSUED')return result(row.result_bytes);")
+          replace_exact('src/service.mjs',
+            "const raw=await readBody(req);demand(raw==='','RECOVERY_BODY_MUST_BE_EMPTY');const row=await this.store.get(recover[1]);demand(row,'PURCHASE_NOT_FOUND',404);authenticate(req,row.buyer_key,'',now);demand(row.state!=='QUOTED','PAYMENT_NOT_AUTHORIZED',409);return this.progress(row);",
+            "const raw=await readBody(req);demand(raw==='','RECOVERY_BODY_MUST_BE_EMPTY');const row=await this.store.get(recover[1]);demand(row,'PURCHASE_NOT_FOUND',404);demand(row.state!=='QUOTED','PAYMENT_NOT_AUTHORIZED',409);return this.progress(row);")
+
+          # The first-party buyer must exercise the same public no-WHP-proof path.
+          replace_exact('src/buyer.mjs',
+            "import {clientProof,purchaseId} from './service.mjs';",
+            "import {purchaseId} from './service.mjs';")
+          replace_exact('src/buyer.mjs',
+            "async request(method,path,body='',payment=null){const headers={'content-type':'application/json','whp-client-proof':clientProof(this.privateKey,method,path,body,this.clock())};if(payment)headers['payment-signature']=encode(payment);",
+            "async request(method,path,body='',payment=null){const headers={'content-type':'application/json'};if(payment)headers['payment-signature']=encode(payment);")
+
+          # Current service discovery must describe the actual low-friction interface.
+          p=Path('src/discovery.mjs'); s=p.read_text()
+          start=s.index("  authentication:{header:'whp-client-proof'")
+          end=s.index("  payment:{protocol:'x402-v2'", start)
+          replacement=(
+            "  authentication:{purchase:'NONE_BEYOND_X402_PAYMENT',retrieval:'NONE',"
+            "review:'WHP-Client-Proof-v1 is used only for reviewer-authenticated review submissions; it is not required for purchase, 402 discovery, result retrieval or recovery.'},\n"
+          )
+          s=s[:start]+replacement+s[end:]
+          s=s.replace("lost_response:'Use authenticated GET result or authenticated empty POST recovery. Do not generate a second wallet authorization.'",
+                      "lost_response:'Use GET result or empty POST recovery with the durable purchase ID. Do not generate a second wallet authorization.'")
+          s=s.replace("headers:{'whp-client-proof':'See '+service.origin+'/v1/contract for a fresh Ed25519 HTTP proof; this is not a wallet key.'}",
+                      "headers:{}")
+          s=s.replace("The complete purchase and authentication contract is '+service.origin+'/v1/contract",
+                      "The complete purchase and payment contract is '+service.origin+'/v1/contract")
+          p.write_text(s)
+
+          # OpenAPI: ClientProof remains scoped only to review; acquisition/retrieval have no WHP auth gate.
+          p=Path('public/openapi.json'); api=json.loads(p.read_text())
+          for route,method in [('/v1/evaluations','post'),('/v1/purchases/{purchase_id}/result','get'),('/v1/purchases/{purchase_id}/recover','post')]:
+              op=api['paths'][route][method]
+              op.pop('security',None)
+              op.get('responses',{}).pop('401',None)
+          api['paths']['/v1/contract']['get']['responses']['200']['description']='Complete schema, authority, quote binding and independent buyer payment requirements; no WHP-specific buyer signature is required to reach 402.'
+          cp=api['components']['securitySchemes']['ClientProof']
+          cp['description']='Reviewer-authentication proof for /v1/reviews only. It is not required for purchase, 402 discovery, result retrieval or recovery.'
+          p.write_text(json.dumps(api,indent=2,ensure_ascii=False)+'\n')
+
+      - name: Verify only the corrected boundary
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {setup} from './test/fixtures.mjs';
+          import {canonical} from './src/canonical.mjs';
+          import {purchaseId} from './src/service.mjs';
+
+          const a=await setup();
+          try {
+            const raw=canonical(a.f.submission);
+            const unpaid=await a.service.handle(new Request('https://standing.test.invalid/v1/evaluations',{method:'POST',headers:{'content-type':'application/json'},body:raw}));
+            assert.equal(unpaid.status,402,'valid unsigned acquisition request must reach 402');
+            const terms=await unpaid.json();
+            assert.equal(terms.x402Version,2);
+            assert.ok(unpaid.headers.get('payment-required'));
+
+            const id=purchaseId(a.f.submission,a.f.rootPin);
+            const retrieval=await a.service.handle(new Request('https://standing.test.invalid/v1/purchases/'+id+'/result'));
+            assert.equal(retrieval.status,202,'quoted purchase must be retrievable without WHP proof');
+
+            const contractResponse=await a.service.handle(new Request('https://standing.test.invalid/v1/contract'));
+            const contract=await contractResponse.json();
+            assert.equal(contract.authentication.purchase,'NONE_BEYOND_X402_PAYMENT');
+            assert.equal(contract.authentication.retrieval,'NONE');
+
+            const openapiResponse=await a.service.handle(new Request('https://standing.test.invalid/v1/openapi.json'));
+            const openapi=await openapiResponse.json();
+            assert.equal(openapi.paths['/v1/evaluations'].post.security,undefined);
+            assert.equal(openapi.paths['/v1/purchases/{purchase_id}/result'].get.security,undefined);
+            assert.equal(openapi.paths['/v1/purchases/{purchase_id}/recover'].post.security,undefined);
+            assert.deepEqual(openapi.paths['/v1/reviews'].post.security,[{ClientProof:[]}]);
+            console.log('PASS: unsigned machine request -> 402; unsigned retrieval/recovery contract; review auth preserved');
+          } finally { await a.store.close(); }
+          NODE
+
+      - name: Commit repaired acquisition surface
+        run: |
+          git config user.name 'wheelerhubbell'
+          git config user.email 'wheelerhubbell@gmail.com'
+          git add src/service.mjs src/buyer.mjs src/discovery.mjs public/openapi.json
+          git commit -m 'fix: direct machine acquisition to x402 without WHP buyer proof'
+          git push origin HEAD:remove-buyer-proof-20260916
