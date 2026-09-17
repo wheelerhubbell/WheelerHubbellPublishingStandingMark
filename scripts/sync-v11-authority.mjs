@@ -1,7 +1,7 @@
-// Existing-root v1.1 administration only. Never generates or rotates keys.
+// Existing-root v1.1 administration only. Never generates, rotates, or migrates private keys.
 import {copyFile,mkdir,readdir,rm} from 'node:fs/promises';
-import {canonical,parseStrict,demand,hash,keyId,publicDer,seal,openSeal,randomHex} from '../src/canonical.mjs';
-import {api,target,variable,value,createVariable} from './netlify-production-target.mjs';
+import {parseStrict,demand,keyId,publicDer,seal,openSeal,randomHex} from '../src/canonical.mjs';
+import {api,target,variable,value} from './netlify-production-target.mjs';
 import {CUSTODY_KEY} from './production-authority-v2.mjs';
 import {administer} from './open-authority-administration.mjs';
 
@@ -21,32 +21,29 @@ function proveExistingCustody(c){
   return {root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,root_signing_access_verified:true,issuer_signing_access_verified:true};
 }
 
-export async function recoverExistingCustody(){
+export async function readExistingCustody(){
   const current=await target();
   const present=await variable(current,CUSTODY_KEY);
   if(present){
     demand(present.values?.length===1&&present.values[0].context==='dev','EXISTING_DEV_CUSTODY_REQUIRED');
     const custody=parseStrict(value(present,'dev'),1048576),proof=proveExistingCustody(custody);
-    return {site:current,custody_recovered:false,...proof};
+    return {site:current,custody,source:'current-site',...proof};
   }
   const historical=await api('/sites/'+HISTORICAL_SITE_ID);
   demand(historical?.id===HISTORICAL_SITE_ID&&historical?.account_id,'HISTORICAL_CUSTODY_SITE_REQUIRED');
   const record=await variable(historical,CUSTODY_KEY);
   demand(record?.values?.length===1&&record.values[0].context==='dev','HISTORICAL_DEV_CUSTODY_REQUIRED');
   const custody=parseStrict(value(record,'dev'),1048576),proof=proveExistingCustody(custody);
-  await createVariable(current,CUSTODY_KEY,canonical(custody),'dev');
-  const back=await variable(current,CUSTODY_KEY);
-  demand(back?.values?.length===1&&back.values[0].context==='dev'&&hash(parseStrict(value(back,'dev'),1048576))===hash(custody),'RECOVERED_CUSTODY_READBACK_FAILED');
-  return {site:current,custody_recovered:true,source_site_id:HISTORICAL_SITE_ID,...proof};
+  return {site:current,custody,source:'historical-site',source_site_id:HISTORICAL_SITE_ID,...proof};
 }
 
 export async function syncV11Authority(directory='artifacts/authority-prepared'){
-  const custody=await recoverExistingCustody();
+  const existing=await readExistingCustody();
   await rm(directory,{recursive:true,force:true});
-  const administration=await administer('sync',directory);
+  const administration=await administer('sync',directory,existing.custody);
   await mkdir('public/authority/history',{recursive:true});
   await copyFile(directory+'/root.json','public/authority/root.json');
   await copyFile(directory+'/trust-bundle.json','public/authority/trust-bundle.json');
   try{for(const name of await readdir(directory+'/history'))await copyFile(directory+'/history/'+name,'public/authority/history/'+name);}catch(e){if(e.code!=='ENOENT')throw e;}
-  return {custody_recovered:custody.custody_recovered,root_pin:custody.root_pin,issuer_key_id:custody.issuer_key_id,status_sequence:administration.status_sequence,status_renewed:administration.status_renewed,production_configuration_changed:administration.production_configuration_changed,generated_new_keys:false,root_rotated:false,payment_executed:false};
+  return {custody_source:existing.source,root_pin:existing.root_pin,issuer_key_id:existing.issuer_key_id,status_sequence:administration.status_sequence,status_renewed:administration.status_renewed,production_configuration_changed:administration.production_configuration_changed,generated_new_keys:false,root_rotated:false,private_custody_migrated:false,payment_executed:false};
 }
