@@ -4,12 +4,11 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {demand} from '../src/canonical.mjs';
 import {verifyAuthority} from './authority-core.mjs';
 import {target,exportTarget,ORIGIN,verifySourceCommitments} from './netlify-production-target.mjs';
-import {CEREMONY,readPublic,getOrEstablishCustody,proveCustody,makeFreshAuthority,makeSourceRecord,readSourceRecord,resumeStatus,renewStatus,persistStatus,installAuthority,checkAdmission,writePublic} from './production-authority-v2.mjs';
+import {CEREMONY,readPublic,getOrEstablishCustody,proveCustody,assertAuthorityContinuity,makeFreshAuthority,makeSourceRecord,readSourceRecord,resumeStatus,renewStatus,persistStatus,installAuthority,checkAdmission,writePublic} from './production-authority-v2.mjs';
 export async function establishProduction(){
  const commitments=await verifySourceCommitments(),site=await target();await exportTarget(site);
  const previous=await readPublic(),c=await getOrEstablishCustody(site,previous),proof=proveCustody(c);
- demand(previous.root_pin===c.previous_root_pin||previous.ceremony_id===CEREMONY&&previous.root_pin===c.root_pin,'UNRELATED_PUBLIC_AUTHORITY_CHANGE');
- const reuse=previous.ceremony_id===CEREMONY;
+ const reuse=previous.root_pin===c.root_pin;if(reuse)assertAuthorityContinuity(previous,c);else demand(previous.root_pin===c.previous_root_pin,'UNRELATED_PUBLIC_AUTHORITY_CHANGE');
  const a=reuse?{bundle:previous.trust_bundle,act:previous.authorization_act}:makeFreshAuthority(c);
  const node=reuse?await readSourceRecord():makeSourceRecord(c);
  await resumeStatus(site,c,a.bundle);renewStatus(c,a.bundle,Math.floor(Date.now()/1000));

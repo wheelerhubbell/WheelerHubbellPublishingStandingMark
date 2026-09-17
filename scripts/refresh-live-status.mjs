@@ -1,12 +1,12 @@
 // Administrative renewal only. Never run this module in the public request handler.
 import {writeFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
-import {canonical,demand,hash} from '../src/canonical.mjs';
+import {canonical,hash} from '../src/canonical.mjs';
 import {target,verifySourceCommitments} from './netlify-production-target.mjs';
-import {CEREMONY,ROOT_FILE,readPublic,readCustody,resumeStatus,renewStatus,persistStatus,installAuthority} from './production-authority-v2.mjs';
+import {ROOT_FILE,readPublic,readCustody,assertAuthorityContinuity,resumeStatus,renewStatus,persistStatus,installAuthority} from './production-authority-v2.mjs';
 export async function refreshStatus(){
  await verifySourceCommitments();const site=await target(),pub=await readPublic(),c=await readCustody(site);
- demand(pub.ceremony_id===CEREMONY&&pub.root_pin===c.root_pin,'ROOT_IDENTITY_CHANGED');
+ assertAuthorityContinuity(pub,c);
  const before=hash(pub.trust_bundle),b=pub.trust_bundle;
  await resumeStatus(site,c,b);renewStatus(c,b,Math.floor(Date.now()/1000));await persistStatus(site,c,b);await installAuthority(site,c,b);
  const changed=before!==hash(b);if(changed){pub.trust_bundle=b;await writeFile(ROOT_FILE,canonical(pub)+'\n');await writeFile('public/authority/trust-bundle.json',canonical(b)+'\n');}

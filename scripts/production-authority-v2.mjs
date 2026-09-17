@@ -21,6 +21,14 @@ export function proveCustody(c){
  demand(new Set(pairs.map(([,id])=>c[id])).size===3&&c.root_pin!==c.previous_root_pin,'FRESH_KEY_SEPARATION_FAILED');
  return {root_pin:c.root_pin,issuer_key_id:c.issuer_key_id,source_key_id:c.source_key_id,root_signing_access_verified:true,issuer_signing_access_verified:true,source_signing_access_verified:true};
 }
+export function assertAuthorityContinuity(pub,c){
+ const proof=proveCustody(c),b=pub?.trust_bundle;
+ demand(pub?.root_pin===proof.root_pin&&pub?.issuer_key_id===proof.issuer_key_id,'UNRELATED_PUBLIC_AUTHORITY_CHANGE');
+ demand(b?.root_public_key&&keyId(b.root_public_key)===proof.root_pin,'UNRELATED_PUBLIC_AUTHORITY_CHANGE');
+ const issuer=b?.certificates?.some(e=>e?.payload?.roles?.includes('ISSUER')&&keyId(e.payload.public_key)===proof.issuer_key_id);
+ const source=b?.certificates?.some(e=>e?.payload?.roles?.includes('SOURCE')&&keyId(e.payload.public_key)===proof.source_key_id);
+ demand(issuer&&source,'UNRELATED_PUBLIC_AUTHORITY_CHANGE');return proof;
+}
 export async function readCustody(site){
  const record=await variable(site,CUSTODY_KEY);demand(record&&record.values?.length===1&&record.values[0].context==='dev','FRESH_ADMIN_CUSTODY_REQUIRED');
  const c=parseStrict(value(record,'dev'),1048576);proveCustody(c);return c;
