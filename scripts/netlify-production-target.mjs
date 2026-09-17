@@ -6,6 +6,9 @@ import {CONTRACT_HASH,VERIFIER_HASH} from '../src/protocol.mjs';
 export const ORIGIN='https://wheeler-hubbell-publishing-standing-mark.netlify.app';
 export const REPOSITORY='wheelerhubbell/WheelerHubbellPublishingStandingMark';
 export const SITE_ID='0347a387-82b7-4b7f-b528-1024ad79b9e7';
+// Netlify's environment-variable API is account/team scoped even for site variables.
+// Pin the owning WHP account explicitly rather than relying on GET /sites/:id to echo account_id.
+export const ACCOUNT_ID='6aaaa6b474ff8bfac03a4352';
 export const COMMITMENTS=Object.freeze({profile:'d6296b9ea7a2c570c2c0ae98af8385d6f8edee1e869fb0ae9f553c90302303a7',contract:'ab76d9b6684ed2c2f26c21888d936d3f814dbe4f2357a9bf97fe538f513a200a',verifier:'dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6'});
 export async function verifySourceCommitments(){
  const m=parseStrict(await readFile(new URL('../public/verifier-manifest.json',import.meta.url),'utf8'));
@@ -21,12 +24,12 @@ export async function api(path,method='GET',body){
  demand(r.ok,'NETLIFY_'+method+'_'+r.status,503);return r.status===204?null:r.json();
 }
 export const value=(e,c='production')=>e?.values?.find(v=>v.context===c)?.value??(c==='production'?e?.values?.find(v=>v.context==='all')?.value:undefined);
-export const prefix=s=>'/accounts/'+s.account_id+'/env';
+export const prefix=s=>'/accounts/'+(s?.account_id??ACCOUNT_ID)+'/env';
 export async function variables(site){return api(prefix(site)+'?site_id='+site.id);}
 export async function variable(site,key){
  try{return await api(prefix(site)+'/'+encodeURIComponent(key)+'?site_id='+site.id);}catch(e){if(e.code==='NETLIFY_GET_404')return null;throw e;}
 }
-export function assertTarget(site){demand(site.id===SITE_ID&&site.ssl_url===ORIGIN,'PRODUCTION_WRITE_TARGET_MISMATCH');}
+export function assertTarget(site){demand(site.id===SITE_ID&&site.ssl_url===ORIGIN,'PRODUCTION_WRITE_TARGET_MISMATCH');if(site.account_id)demand(site.account_id===ACCOUNT_ID,'PRODUCTION_ACCOUNT_TARGET_MISMATCH');}
 export async function createVariable(site,key,data,context='production'){
  assertTarget(site);demand(typeof data==='string'&&Buffer.byteLength(data)<=5000,'ENVIRONMENT_VALUE_SIZE_LIMIT');
  await api(prefix(site)+'?site_id='+site.id,'POST',[{key,values:[{context,value:data}]}]);
@@ -39,9 +42,9 @@ export async function put(site,key,data,context='production'){
  await api(prefix(site)+(prior?'/'+encodeURIComponent(key):'')+'?site_id='+site.id,prior?'PUT':'POST',prior?body:[body]);
 }
 export async function target(){
- const s=await api('/sites/'+SITE_ID);assertTarget(s);demand(s.account_id,'NETLIFY_ACCOUNT_ID_REQUIRED');
+ const s=await api('/sites/'+SITE_ID);assertTarget(s);
  const repo=s.build_settings??s.repo??{};
  const path=(repo.repo_path??repo.repo_url??'').replace(/^https?:\/\/github.com\//,'').replace(/\.git$/,'');
- demand(path===REPOSITORY&&repo.repo_branch==='main','NETLIFY_REPOSITORY_CUTOVER_REQUIRED',503);return s;
+ demand(path===REPOSITORY&&repo.repo_branch==='main','NETLIFY_REPOSITORY_CUTOVER_REQUIRED',503);return {...s,account_id:s.account_id??ACCOUNT_ID};
 }
 export async function exportTarget(site){if(process.env.GITHUB_ENV)await appendFile(process.env.GITHUB_ENV,'NETLIFY_SITE_ID='+site.id+'\nWHP_ORIGIN='+ORIGIN+'\n');}
