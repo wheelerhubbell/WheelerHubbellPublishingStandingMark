@@ -6,7 +6,7 @@ import {verifyAuthority} from './authority-core.mjs';
 import {postgresStore,migration} from '../src/store.mjs';
 import {livePaymentDestination} from '../src/discovery.mjs';
 import {api,target,variable,put,value,ORIGIN,exportTarget,verifySourceCommitments} from './netlify-production-target.mjs';
-import {CEREMONY,readPublic} from './production-authority-v2.mjs';
+import {readPublic,readCustody,assertAuthorityContinuity} from './production-authority-v2.mjs';
 export const PAYMENT_REQUIREMENTS={scheme:'exact',network:'eip155:8453',amount:'1000000',asset:'0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',payTo:'0x1050eddd8282623b0c263ed6bdbd42370bbc28d3',maxTimeoutSeconds:300,extra:{assetTransferMethod:'eip3009',paymentFlow:'authorization',name:'USD Coin',version:'2'}};
 const tables=['purchases','registry_events','review_requests'];
 const required={purchases:{id:['text','NO'],buyer_key:['text','NO'],client_reference:['text','NO'],request_hash:['text','NO'],state:['text','NO'],payment_key:['text','YES'],record:['text','NO'],result_bytes:['text','YES'],lease_owner:['text','YES'],lease_until:['bigint','NO']},registry_events:{purchase_id:['text','NO'],sequence:['integer','NO'],event_bytes:['text','NO'],event_hash:['text','NO']},review_requests:{review_id:['text','NO'],purchase_id:['text','NO'],record:['text','NO']}};
@@ -28,7 +28,7 @@ export async function inspectExistingDatabase(site){
  }finally{await store.close();}
 }
 export async function configureProduction(){
- const commitments=await verifySourceCommitments(),site=await target();await exportTarget(site);const pub=await readPublic();demand(pub.ceremony_id===CEREMONY,'FRESH_PUBLISHED_AUTHORITY_REQUIRED');
+ const commitments=await verifySourceCommitments(),site=await target();await exportTarget(site);const pub=await readPublic(),c=await readCustody(site);assertAuthorityContinuity(pub,c);
  const issuer=value(await variable(site,'WHP_ISSUER_PRIVATE_KEY')),bundle=parseStrict(value(await variable(site,'WHP_TRUST_BUNDLE_JSON')),1048576);
  verifyAuthority(bundle,pub.root_pin,issuer,Math.floor(Date.now()/1000));demand(value(await variable(site,'WHP_ROOT_PIN'))===pub.root_pin&&keyId(publicDer(issuer))===pub.issuer_key_id&&hash(bundle)===hash(pub.trust_bundle),'AUTHORITY_CONFIGURATION_MISMATCH');
  livePaymentDestination(PAYMENT_REQUIREMENTS);
