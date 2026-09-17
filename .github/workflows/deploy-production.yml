@@ -46,3 +46,7 @@ jobs:
           name: provider-neutral-source-proof
           path: artifacts/provider-neutral-source.json
           if-no-files-found: error
+      - name: Deploy this exact GitHub checkout to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: npx --yes netlify-cli@latest deploy --prod --dir=. --functions=netlify/functions --site=0347a387-82b7-4b7f-b528-1024ad79b9e7 --message "GitHub $GITHUB_SHA"
