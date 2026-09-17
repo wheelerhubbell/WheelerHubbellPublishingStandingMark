@@ -1,0 +1,33 @@
+{
+  "version": "WHP-CPI-OFFER-v1",
+  "record_id": "WHP-REC-001-CPI",
+  "seller": {
+    "name": "Justin Wheeler Hubbell Bowen",
+    "controller_alias": "jwhbpersonal.base.eth",
+    "controller_address": "0xdbb1c7dcf901c9b76e5943c27ad652cfc7f61135"
+  },
+  "account_debtor": "Wheeler Hubbell Publishing, Inc.",
+  "underlying_payment_right_usd_cents": 12500,
+  "purchase": {
+    "network": "eip155:8453",
+    "asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "asset_name": "USDC",
+    "amount_atomic": 125000000,
+    "recipient": "0xdbb1c7dcf901c9b76e5943c27ad652cfc7f61135"
+  },
+  "delivery": "Control of the existing WHP-REC-001-CPI payment right transfers only after independently verified exact finalized settlement and valid predecessor-controller authorization.",
+  "fail_closed": true,
+  "evidence": {
+    "genesis": "cpi/genesis.json",
+    "control_proof_agreement": "cpi/control-proof-agreement.md",
+    "registry_schema": "cpi/registry.schema.json",
+    "transition_engine": "cpi/state-transition.mjs",
+    "settlement_verifier": "cpi/base-settlement-verifier.mjs"
+  },
+  "not_claimed": [
+    "This offer does not state that WHP currently has USD 125 cash on hand.",
+    "This offer does not create or duplicate the underlying debt.",
+    "USDC is purchase consideration for the payment right, not a re-denomination of the underlying USD obligation.",
+    "Publication of this offer does not itself complete a sale or transfer control."
+  ]
+}
