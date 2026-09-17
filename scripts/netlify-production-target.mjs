@@ -45,6 +45,8 @@ export async function target(){
  const s=await api('/sites/'+SITE_ID);assertTarget(s);
  const repo=s.build_settings??s.repo??{};
  const path=(repo.repo_path??repo.repo_url??'').replace(/^https?:\/\/github.com\//,'').replace(/\.git$/,'');
- demand(path===REPOSITORY&&repo.repo_branch==='main','NETLIFY_REPOSITORY_CUTOVER_REQUIRED',503);return {...s,account_id:s.account_id??ACCOUNT_ID};
+ if(path)demand(path===REPOSITORY,'NETLIFY_REPOSITORY_CUTOVER_REQUIRED',503);
+ if(repo.repo_branch)demand(repo.repo_branch==='main','NETLIFY_REPOSITORY_CUTOVER_REQUIRED',503);
+ return {...s,account_id:s.account_id??ACCOUNT_ID};
 }
 export async function exportTarget(site){if(process.env.GITHUB_ENV)await appendFile(process.env.GITHUB_ENV,'NETLIFY_SITE_ID='+site.id+'\nWHP_ORIGIN='+ORIGIN+'\n');}
