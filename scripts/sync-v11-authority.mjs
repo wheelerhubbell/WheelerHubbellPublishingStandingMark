@@ -1,7 +1,7 @@
 // Existing-root v1.1 administration only. Never generates or rotates keys.
 import {copyFile,mkdir,readdir,rm} from 'node:fs/promises';
 import {canonical,parseStrict,demand,hash,keyId,publicDer,seal,openSeal,randomHex} from '../src/canonical.mjs';
-import {api,target,variable,value,createVariable} from './netlify-production-target.mjs';
+import {api,target,variable,value,createVariable,ACCOUNT_ID} from './netlify-production-target.mjs';
 import {CUSTODY_KEY} from './production-authority-v2.mjs';
 import {administer} from './open-authority-administration.mjs';
 
@@ -29,8 +29,10 @@ export async function recoverExistingCustody(){
     const custody=parseStrict(value(present,'dev'),1048576),proof=proveExistingCustody(custody);
     return {site:current,custody_recovered:false,...proof};
   }
-  const historical=await api('/sites/'+HISTORICAL_SITE_ID);
-  demand(historical?.id===HISTORICAL_SITE_ID&&historical?.account_id,'HISTORICAL_CUSTODY_SITE_REQUIRED');
+  const rawHistorical=await api('/sites/'+HISTORICAL_SITE_ID);
+  demand(rawHistorical?.id===HISTORICAL_SITE_ID,'HISTORICAL_CUSTODY_SITE_REQUIRED');
+  const historical={...rawHistorical,account_id:rawHistorical.account_id??ACCOUNT_ID};
+  if(rawHistorical.account_id)demand(rawHistorical.account_id===ACCOUNT_ID,'HISTORICAL_ACCOUNT_TARGET_MISMATCH');
   const record=await variable(historical,CUSTODY_KEY);
   demand(record?.values?.length===1&&record.values[0].context==='dev','HISTORICAL_DEV_CUSTODY_REQUIRED');
   const custody=parseStrict(value(record,'dev'),1048576),proof=proveExistingCustody(custody);
