@@ -150,7 +150,7 @@ async function installBundle(site,bundle,approval,prior,expected){
   const back=await variable(site,'WHP_TRUST_BUNDLE_JSON');
   demand(back?.values?.length===1&&back.values[0].context==='production'&&hash(parseStrict(value(back),1048576))===hash(bundle),'AUTHORITY_INSTALL_READBACK_FAILED');
   await runtime(site,approval,prior);
-  return {production_configuration_changed:hash(bundle)!==hash(current.bundle),runtime_configuration_readback_verified:true,root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,trust_bundle_sha256:hash(b),status_sequence:bundle.status_snapshot.payload.sequence,private_keys_changed:false,deployed:false,production_completion:false};
+  return {production_configuration_changed:hash(bundle)!==hash(current.bundle),runtime_configuration_readback_verified:true,root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,trust_bundle_sha256:hash(bundle),status_sequence:bundle.status_snapshot.payload.sequence,private_keys_changed:false,deployed:false,production_completion:false};
 }
 
 export async function administer(mode,directory,custodyOverride=null){
