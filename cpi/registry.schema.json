@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:whp:cpi:registry-state:v1",
+  "title": "WHP CPI Controller Registry State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version","record_id","version","status","controller","predecessor_hash","settlement","transition_id"],
+  "properties": {
+    "schema_version": {"const":"WHP-CPI-REGISTRY-v1"},
+    "record_id": {"const":"WHP-REC-001-CPI"},
+    "version": {"type":"integer","minimum":0},
+    "status": {"enum":["ACTIVE","TRANSFERRED","SATISFIED","CANCELLED"]},
+    "controller": {
+      "type":"object","additionalProperties":false,
+      "required":["scheme","identifier"],
+      "properties": {
+        "scheme":{"enum":["ethereum-address","secp256k1-public-key"]},
+        "identifier":{"type":"string","minLength":1}
+      }
+    },
+    "predecessor_hash":{"type":["string","null"],"pattern":"^[0-9a-f]{64}$"},
+    "transition_id":{"type":"string","minLength":1},
+    "settlement": {
+      "type":"object","additionalProperties":false,
+      "required":["required","network","asset","amount_atomic","recipient","proof_tx"],
+      "properties": {
+        "required":{"type":"boolean"},
+        "network":{"const":"eip155:8453"},
+        "asset":{"const":"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"},
+        "amount_atomic":{"type":"integer","minimum":0},
+        "recipient":{"type":"string"},
+        "proof_tx":{"type":["string","null"]}
+      }
+    }
+  }
+}
