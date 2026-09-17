@@ -1,0 +1,32 @@
+{
+  "schema_version": "WHP-CPI-REGISTRY-v1",
+  "record_id": "WHP-REC-001-CPI",
+  "version": 0,
+  "status": "ACTIVE",
+  "controller": {
+    "scheme": "ethereum-address",
+    "identifier": "0xdbb1c7dcf901c9b76e5943c27ad652cfc7f61135"
+  },
+  "controller_alias": "jwhbpersonal.base.eth",
+  "creditor": "Justin Wheeler Hubbell Bowen",
+  "debtor": "Wheeler Hubbell Publishing, Inc.",
+  "underlying_obligation": {
+    "type": "formation-expense-reimbursement",
+    "principal_usd_cents": 12500,
+    "source_ref": "EXP-001-NY-INCORP",
+    "no_duplicate_debt": true
+  },
+  "predecessor_hash": null,
+  "transition_id": "GENESIS",
+  "settlement": {
+    "required": true,
+    "network": "eip155:8453",
+    "asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "amount_atomic": 125000000,
+    "recipient": "0xdbb1c7dcf901c9b76e5943c27ad652cfc7f61135",
+    "proof_tx": null
+  },
+  "control_proof_agreement": "cpi/control-proof-agreement.md",
+  "transfer_engine": "cpi/state-transition.mjs",
+  "legal_character": "Existing USD 125.00 WHP reimbursement payment right represented by a controllable electronic record; USDC is purchase consideration, not the denomination or creation of the underlying debt."
+}
