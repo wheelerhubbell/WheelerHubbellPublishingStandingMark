@@ -40,6 +40,7 @@ export async function put(site,key,data,context='production'){
 }
 async function resolveAccountId(site){
  if(site.account_id)return site.account_id;
+ if(site.account_slug)return site.account_slug;
  const accounts=await api('/accounts');demand(Array.isArray(accounts)&&accounts.length,'NETLIFY_ACCOUNTS_REQUIRED');
  const matches=[];
  for(const account of accounts){
