@@ -43,7 +43,6 @@ async function approved(){
   return {publication,act,bundle:b};
 }
 
-// Root-authorized renewals may change only this epoch's status snapshot.
 function candidate(bundle,approval,at=now()){
   demand(hash(rules(bundle))===hash(rules(approval.bundle)),'RATIFIED_AUTHORITY_CHANGED');
   issuer(bundle,at);
@@ -144,8 +143,6 @@ function follows(next,current,approval){
 
 async function installBundle(site,bundle,approval,prior,expected){
   candidate(bundle,approval);
-  // Re-read immediately before the single production write; workflow concurrency
-  // must serialize administrators because the Netlify env API has no CAS.
   const current=await runtime(site,approval,prior);
   demand(hash(current.bundle)===hash(expected.bundle),'RUNTIME_AUTHORITY_CHANGED');
   follows(bundle,current,approval);
@@ -153,10 +150,10 @@ async function installBundle(site,bundle,approval,prior,expected){
   const back=await variable(site,'WHP_TRUST_BUNDLE_JSON');
   demand(back?.values?.length===1&&back.values[0].context==='production'&&hash(parseStrict(value(back),1048576))===hash(bundle),'AUTHORITY_INSTALL_READBACK_FAILED');
   await runtime(site,approval,prior);
-  return {production_configuration_changed:hash(bundle)!==hash(current.bundle),runtime_configuration_readback_verified:true,root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,trust_bundle_sha256:hash(bundle),status_sequence:bundle.status_snapshot.payload.sequence,private_keys_changed:false,deployed:false,production_completion:false};
+  return {production_configuration_changed:hash(bundle)!==hash(current.bundle),runtime_configuration_readback_verified:true,root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,trust_bundle_sha256:hash(b),status_sequence:bundle.status_snapshot.payload.sequence,private_keys_changed:false,deployed:false,production_completion:false};
 }
 
-export async function administer(mode,directory){
+export async function administer(mode,directory,custodyOverride=null){
   demand(['prepare','install','renew','sync'].includes(mode)&&directory,'PREPARE_INSTALL_RENEW_OR_SYNC_AND_DIRECTORY_REQUIRED');
   const approval=await approved(),prior=await previous(approval);
   const published=await publicCandidate(approval,prior);
@@ -183,9 +180,12 @@ export async function administer(mode,directory){
     await stage(directory,approval,bundle,prior);
     return {...await installBundle(site,bundle,approval,prior,current),prepared_directory:resolve(directory),status_renewed:false};
   }
-  const record=await variable(site,'WHP_AUTHORITY_CUSTODY_V2');
-  demand(record?.values?.length===1&&record.values[0].context==='dev','EXISTING_DEV_CUSTODY_REQUIRED');
-  const custody=parseStrict(value(record,'dev'),1048576);
+  let custody=custodyOverride;
+  if(!custody){
+    const record=await variable(site,'WHP_AUTHORITY_CUSTODY_V2');
+    demand(record?.values?.length===1&&record.values[0].context==='dev','EXISTING_DEV_CUSTODY_REQUIRED');
+    custody=parseStrict(value(record,'dev'),1048576);
+  }
   demand(custody.root_pin===ROOT_PIN&&custody.issuer_key_id===ISSUER_ID&&keyId(publicDer(custody.root_private_key))===ROOT_PIN&&keyId(publicDer(custody.issuer_private_key))===ISSUER_ID,'EXISTING_CUSTODY_IDENTITY_MISMATCH');
   const until=Math.min(at+86400,bundle.profile_authorization.payload.valid_until,...bundle.certificates.map(c=>c.payload.valid_until));
   demand(until>at+3600,'EXISTING_AUTHORITY_EXPIRES_SOON');
