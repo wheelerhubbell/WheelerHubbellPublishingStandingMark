@@ -1,12 +1,13 @@
-// Current project, existing database, existing payment semantics. No provisioning or account-plan writes.
+// Current project, existing database, existing payment semantics. No authority establishment.
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 import {canonical,parseStrict,demand,hash,publicDer,keyId} from '../src/canonical.mjs';
-import {verifyAuthority} from './authority-core.mjs';
+import {validateTrust} from '../src/authority.mjs';
 import {postgresStore,migration} from '../src/store.mjs';
 import {livePaymentDestination} from '../src/discovery.mjs';
 import {api,target,variable,put,value,ORIGIN,exportTarget,verifySourceCommitments} from './netlify-production-target.mjs';
-import {readPublic,readCustody,assertAuthorityContinuity} from './production-authority-v2.mjs';
+import {readApprovedPublicAuthority} from './open-authority-administration.mjs';
+
 export const PAYMENT_REQUIREMENTS={scheme:'exact',network:'eip155:8453',amount:'1000000',asset:'0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',payTo:'0x1050eddd8282623b0c263ed6bdbd42370bbc28d3',maxTimeoutSeconds:300,extra:{assetTransferMethod:'eip3009',paymentFlow:'authorization',name:'USD Coin',version:'2'}};
 const tables=['purchases','registry_events','review_requests'];
 const required={purchases:{id:['text','NO'],buyer_key:['text','NO'],client_reference:['text','NO'],request_hash:['text','NO'],state:['text','NO'],payment_key:['text','YES'],record:['text','NO'],result_bytes:['text','YES'],lease_owner:['text','YES'],lease_until:['bigint','NO']},registry_events:{purchase_id:['text','NO'],sequence:['integer','NO'],event_bytes:['text','NO'],event_hash:['text','NO']},review_requests:{review_id:['text','NO'],purchase_id:['text','NO'],record:['text','NO']}};
@@ -28,14 +29,16 @@ export async function inspectExistingDatabase(site){
  }finally{await store.close();}
 }
 export async function configureProduction(){
- const commitments=await verifySourceCommitments(),site=await target();await exportTarget(site);const pub=await readPublic(),c=await readCustody(site);assertAuthorityContinuity(pub,c);
- const issuer=value(await variable(site,'WHP_ISSUER_PRIVATE_KEY')),bundle=parseStrict(value(await variable(site,'WHP_TRUST_BUNDLE_JSON')),1048576);
- verifyAuthority(bundle,pub.root_pin,issuer,Math.floor(Date.now()/1000));demand(value(await variable(site,'WHP_ROOT_PIN'))===pub.root_pin&&keyId(publicDer(issuer))===pub.issuer_key_id&&hash(bundle)===hash(pub.trust_bundle),'AUTHORITY_CONFIGURATION_MISMATCH');
+ const commitments=await verifySourceCommitments(),site=await target();await exportTarget(site);const pub=await readApprovedPublicAuthority();
+ const [rootRow,issuerRow,bundleRow]=await Promise.all(['WHP_ROOT_PIN','WHP_ISSUER_PRIVATE_KEY','WHP_TRUST_BUNDLE_JSON'].map(k=>variable(site,k)));
+ const issuer=value(issuerRow),bundle=parseStrict(value(bundleRow),1048576);
+ demand(value(rootRow)===pub.root_pin&&keyId(publicDer(issuer))===pub.issuer_key_id&&hash(bundle)===hash(pub.trust_bundle),'AUTHORITY_CONFIGURATION_MISMATCH');
+ const trust=validateTrust(bundle,pub.root_pin,Math.floor(Date.now()/1000));demand(trust.profile.environment==='LIVE','LIVE_AUTHORITY_REQUIRED');
  livePaymentDestination(PAYMENT_REQUIREMENTS);
  const database=await inspectExistingDatabase(site);
  const configuration={WHP_USE_NETLIFY_DATABASE:'true',WHP_ORIGIN:ORIGIN,WHP_FACILITATOR_URL:'https://facilitator.payai.network',WHP_RPC_URL:'https://base-rpc.publicnode.com',WHP_PAYMENT_REQUIREMENTS_JSON:canonical(PAYMENT_REQUIREMENTS),WHP_RESOLUTION_URL:ORIGIN+'/.well-known/standing-capability.json',WHP_CAPABILITY_CATALOG_URL:ORIGIN+'/discovery/provider-index.json'};
  for(const [k,v] of Object.entries(configuration))await put(site,k,v);for(const [k,v] of Object.entries(configuration))demand(value(await variable(site,k))===v,'CONFIG_READBACK_FAILED_'+k);
- const report={checked_at:new Date().toISOString(),source_commit:process.env.GITHUB_SHA??null,origin:ORIGIN,site_id:site.id,commitments,root_pin:pub.root_pin,issuer_key_id:pub.issuer_key_id,authority_configuration_agrees:true,database,payment_requirements:PAYMENT_REQUIREMENTS,payment_semantics_changed:false,configuration_ready_for_deployment:true,deployed_runtime_observed:false,account_plan_changed:false,payment_executed:false};
+ const report={checked_at:new Date().toISOString(),source_commit:process.env.GITHUB_SHA??null,origin:ORIGIN,site_id:site.id,commitments,root_pin:pub.root_pin,issuer_key_id:pub.issuer_key_id,authority_configuration_agrees:true,v11_authority_verified:true,database,payment_requirements:PAYMENT_REQUIREMENTS,payment_semantics_changed:false,configuration_ready_for_deployment:true,deployed_runtime_observed:false,account_plan_changed:false,payment_executed:false};
  await mkdir('evidence/production',{recursive:true});await writeFile('evidence/production/configuration.json',JSON.stringify(report,null,2)+'\n');return report;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){try{console.log(JSON.stringify(await configureProduction()));}catch(e){console.error('PRODUCTION_CONFIGURATION_STOPPED',e.code??'SAFE_INTERNAL_FAILURE');process.exitCode=1;}}
