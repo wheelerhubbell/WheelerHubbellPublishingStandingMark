@@ -16,6 +16,7 @@ import {target,variable,value,put,ORIGIN} from './netlify-production-target.mjs'
 const RATIFICATION='public/authority/ratifications/open-acquisition-v1.1/root.json';
 const ROOT_PIN='e3a0a2945081823171841bde32a6df7fc505b6f0b3e6ab9b6c85ecc9f3d49bfc';
 const ISSUER_ID='8d65f5a4057eedb76ac3db83e9217a374c0072adfa3986b4745e4b5b5bbb22e8';
+const HISTORICAL_ORIGIN='https://wheelerhubbellpublishingstandingmark.netlify.app';
 const now=()=>Math.floor(Date.now()/1000);
 const read=async path=>parseStrict(await readFile(path,'utf8'),1048576);
 const rules=b=>({...b,status_snapshot:null});
@@ -120,17 +121,20 @@ function deploymentGate(){
 
 async function runtime(site,approval,prior){
   const [root,issuerRow,bundleRow,origin]=await Promise.all(['WHP_ROOT_PIN','WHP_ISSUER_PRIVATE_KEY','WHP_TRUST_BUNDLE_JSON','WHP_ORIGIN'].map(k=>variable(site,k)));
-  demand(value(root)===ROOT_PIN&&value(origin)===ORIGIN,'RUNTIME_IDENTITY_MISMATCH');
+  const rootValue=value(root),originValue=value(origin);
+  if(rootValue!==undefined)demand(rootValue===ROOT_PIN,'RUNTIME_ROOT_IDENTITY_MISMATCH');
+  if(originValue!==undefined)demand(originValue===ORIGIN||originValue===HISTORICAL_ORIGIN,'RUNTIME_ORIGIN_MISMATCH');
   demand(issuerRow?.values?.length===1&&issuerRow.values[0].context==='production','ISSUER_PRODUCTION_CUSTODY_REQUIRED');
   demand(keyId(publicDer(value(issuerRow)))===ISSUER_ID,'EXISTING_ISSUER_MISMATCH');
   const bundle=parseStrict(value(bundleRow),1048576);
-  if(hash(rules(bundle))===hash(rules(approval.bundle))){candidate(bundle,approval,statusTime(bundle,now()));return {bundle,epoch:'candidate'};}
+  demand(keyId(bundle.root_public_key)===ROOT_PIN,'RUNTIME_ROOT_BUNDLE_MISMATCH');
+  if(hash(rules(bundle))===hash(rules(approval.bundle))){candidate(bundle,approval,statusTime(bundle,now()));return {bundle,epoch:'candidate',needs_root_pin:rootValue!==ROOT_PIN,needs_origin:originValue!==ORIGIN};}
   demand(hash(rules(bundle))===hash(rules(prior.publication.trust_bundle)),'UNRELATED_RUNTIME_AUTHORITY');
   validatePreviousTrust(bundle,ROOT_PIN,statusTime(bundle,now()));
   const s=bundle.status_snapshot.payload,old=prior.publication.trust_bundle.status_snapshot;
   demand(s.sequence>=old.payload.sequence,'PREVIOUS_STATUS_ROLLBACK');
   if(s.sequence===old.payload.sequence)demand(hash(bundle.status_snapshot)===hash(old),'PREVIOUS_STATUS_CONFLICT');
-  return {bundle,epoch:'previous'};
+  return {bundle,epoch:'previous',needs_root_pin:rootValue!==ROOT_PIN,needs_origin:originValue!==ORIGIN};
 }
 
 function follows(next,current,approval){
@@ -146,11 +150,14 @@ async function installBundle(site,bundle,approval,prior,expected){
   const current=await runtime(site,approval,prior);
   demand(hash(current.bundle)===hash(expected.bundle),'RUNTIME_AUTHORITY_CHANGED');
   follows(bundle,current,approval);
+  if(current.needs_root_pin)await put(site,'WHP_ROOT_PIN',ROOT_PIN,'production');
+  if(current.needs_origin)await put(site,'WHP_ORIGIN',ORIGIN,'production');
   await put(site,'WHP_TRUST_BUNDLE_JSON',canonical(bundle),'production');
   const back=await variable(site,'WHP_TRUST_BUNDLE_JSON');
   demand(back?.values?.length===1&&back.values[0].context==='production'&&hash(parseStrict(value(back),1048576))===hash(bundle),'AUTHORITY_INSTALL_READBACK_FAILED');
-  await runtime(site,approval,prior);
-  return {production_configuration_changed:hash(bundle)!==hash(current.bundle),runtime_configuration_readback_verified:true,root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,trust_bundle_sha256:hash(bundle),status_sequence:bundle.status_snapshot.payload.sequence,private_keys_changed:false,deployed:false,production_completion:false};
+  const normalized=await runtime(site,approval,prior);
+  demand(!normalized.needs_root_pin&&!normalized.needs_origin,'RUNTIME_IDENTITY_NORMALIZATION_FAILED');
+  return {production_configuration_changed:hash(bundle)!==hash(current.bundle)||current.needs_root_pin||current.needs_origin,runtime_configuration_readback_verified:true,root_pin:ROOT_PIN,issuer_key_id:ISSUER_ID,trust_bundle_sha256:hash(bundle),status_sequence:bundle.status_snapshot.payload.sequence,private_keys_changed:false,deployed:false,production_completion:false};
 }
 
 export async function administer(mode,directory,custodyOverride=null){
