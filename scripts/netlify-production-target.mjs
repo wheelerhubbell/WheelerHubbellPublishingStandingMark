@@ -3,10 +3,10 @@ import {appendFile,readFile} from 'node:fs/promises';
 import {demand,parseStrict,hashBytes} from '../src/canonical.mjs';
 import {PROFILE_HASH} from '../src/profile.mjs';
 import {CONTRACT_HASH,VERIFIER_HASH} from '../src/protocol.mjs';
-export const ORIGIN='https://wheelerhubbellpublishingstandingmark.netlify.app';
+export const ORIGIN='https://wheeler-hubbell-publishing-standing-mark.netlify.app';
 export const REPOSITORY='wheelerhubbell/WheelerHubbellPublishingStandingMark';
-export const SITE_ID='813ee022-f4d9-4d8e-a974-86158583a39f';
-export const COMMITMENTS=Object.freeze({profile:'4244be9ed0012eaeba8e2efeb9d274ad3c1f3e188748838c191129054d24c5ab',contract:'dd433c055fe0ad0bdb0326479b3339eea018204ccef44cd6ef247520a29c8e75',verifier:'bb8cb78205f1892dcbf00d845cf85e504a0efacf2a0d8a793313fa8c0e99b833'});
+export const SITE_ID='0347a387-82b7-4b7f-b528-1024ad79b9e7';
+export const COMMITMENTS=Object.freeze({profile:'d6296b9ea7a2c570c2c0ae98af8385d6f8edee1e869fb0ae9f553c90302303a7',contract:'ab76d9b6684ed2c2f26c21888d936d3f814dbe4f2357a9bf97fe538f513a200a',verifier:'dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6'});
 export async function verifySourceCommitments(){
  const m=parseStrict(await readFile(new URL('../public/verifier-manifest.json',import.meta.url),'utf8'));
  demand(PROFILE_HASH===COMMITMENTS.profile,'FROZEN_PROFILE_MISMATCH');
