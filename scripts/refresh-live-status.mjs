@@ -1,15 +1,13 @@
-// Administrative renewal only. Never run this module in the public request handler.
-import {writeFile} from 'node:fs/promises';
+// Scheduled entrypoint for the already-ratified v1.1 WHP authority. No key establishment.
 import {pathToFileURL} from 'node:url';
-import {canonical,hash} from '../src/canonical.mjs';
-import {target,verifySourceCommitments} from './netlify-production-target.mjs';
-import {ROOT_FILE,readPublic,readCustody,assertAuthorityContinuity,resumeStatus,renewStatus,persistStatus,installAuthority} from './production-authority-v2.mjs';
+import {syncV11Authority} from './sync-v11-authority.mjs';
+
 export async function refreshStatus(){
- await verifySourceCommitments();const site=await target(),pub=await readPublic(),c=await readCustody(site);
- assertAuthorityContinuity(pub,c);
- const before=hash(pub.trust_bundle),b=pub.trust_bundle;
- await resumeStatus(site,c,b);renewStatus(c,b,Math.floor(Date.now()/1000));await persistStatus(site,c,b);await installAuthority(site,c,b);
- const changed=before!==hash(b);if(changed){pub.trust_bundle=b;await writeFile(ROOT_FILE,canonical(pub)+'\n');await writeFile('public/authority/trust-bundle.json',canonical(b)+'\n');}
- return {changed,root_pin:c.root_pin,status_sequence:b.status_snapshot.payload.sequence,previous_status_hash:b.status_snapshot.payload.previous_hash,status_valid_from:b.status_snapshot.payload.valid_from,status_valid_until:b.status_snapshot.payload.valid_until,root_rotated:false,certificates_changed:false,revocations_changed:false,production_environment_updated:true,deployed_runtime_refresh_verified:false,payment_executed:false};
+  const result=await syncV11Authority();
+  return {changed:result.status_renewed||result.production_configuration_changed,...result,deployed_runtime_refresh_verified:false};
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){try{console.log(JSON.stringify(await refreshStatus()));}catch(e){console.error('STATUS_REFRESH_STOPPED',e.code??'SAFE_INTERNAL_FAILURE');process.exitCode=1;}}
+
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
+  try{console.log(JSON.stringify(await refreshStatus()));}
+  catch(e){console.error('STATUS_REFRESH_STOPPED',e.code??'SAFE_INTERNAL_FAILURE');process.exitCode=1;}
+}
