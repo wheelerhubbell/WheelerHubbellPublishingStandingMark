@@ -1,6 +1,5 @@
 // Public production configuration is source-owned and provider-neutral.
 // Hosting may supply infrastructure/secrets, but may not redefine WHP trust or payment semantics.
-export const DEFAULT_PRODUCTION_ORIGIN='https://wheeler-hubbell-publishing-standing-mark.netlify.app';
 export const DEFAULT_FACILITATOR_URL='https://facilitator.payai.network';
 export const DEFAULT_RPC_URL='https://base-rpc.publicnode.com';
 export const PRODUCTION_PAYMENT_REQUIREMENTS=Object.freeze({
@@ -13,9 +12,10 @@ export const PRODUCTION_PAYMENT_REQUIREMENTS=Object.freeze({
   extra:Object.freeze({assetTransferMethod:'eip3009',paymentFlow:'authorization',name:'USD Coin',version:'2'})
 });
 
+const cleanOrigin=v=>typeof v==='string'&&v.length?(/^https?:\/\//.test(v)?v:'https://'+v).replace(/\/$/,''):undefined;
 export function runtimeDefaults(env={}){
   return {
-    origin:env.WHP_ORIGIN??env.URL??DEFAULT_PRODUCTION_ORIGIN,
+    origin:cleanOrigin(env.WHP_ORIGIN??env.URL??env.DEPLOY_PRIME_URL??env.VERCEL_PROJECT_PRODUCTION_URL??env.VERCEL_URL),
     facilitatorUrl:env.WHP_FACILITATOR_URL??DEFAULT_FACILITATOR_URL,
     rpcUrl:env.WHP_RPC_URL??DEFAULT_RPC_URL
   };
