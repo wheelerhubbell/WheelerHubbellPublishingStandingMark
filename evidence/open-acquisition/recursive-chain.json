@@ -15,94 +15,94 @@
       "cryptographic_integrity": "VERIFIED",
       "evaluation_replay": "VERIFIED",
       "environment": "TEST",
-      "purchase_id": "a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
-      "mark_id": "WHP-SM-a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
+      "purchase_id": "409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
+      "mark_id": "WHP-SM-409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
       "assessment": "ESTABLISHED",
       "current_standing": "ACTIVE",
       "namespace_evidence": "Issuer-signed HTTPS observations replayed; not independent proof of historical GitHub state.",
       "payment_chain_finality": "SIMULATED_NOT_LIVE",
-      "expires_at": 1789569612,
+      "expires_at": 1789716297,
       "historical_issuance": "VERIFIED",
       "institutional_root_admission": "CALLER_SUPPLIED_PIN_REQUIRED",
       "current_discovery": {
         "verified": true,
         "resolution_id": "urn:whp:standing:resolution:1",
         "capability_id": "urn:whp:standing:capability:1",
-        "service_origin": "http://127.0.0.1:34539",
-        "observed_at": 1789568412,
-        "valid_until": 1789568712
+        "service_origin": "http://127.0.0.1:33943",
+        "observed_at": 1789715098,
+        "valid_until": 1789715398
       },
       "technical_live_issuance_verified": false,
       "outside_buyer_relationship": "NOT_ESTABLISHED_BY_THIS_VERIFIER",
       "live_completion_verified": false
     },
-    "purchase_id": "a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
+    "purchase_id": "409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
     "object_id": "a-copy",
     "source_keys": [
-      "73a391868aa8490d53d159cc55962965f4e4303cb14d204cb5a15e8b8df8b6f3",
-      "73a391868aa8490d53d159cc55962965f4e4303cb14d204cb5a15e8b8df8b6f3"
+      "c1448f3dd51f2040ef25bdfc09df6f25e7ca825b52b74df28173ca874347a57e",
+      "c1448f3dd51f2040ef25bdfc09df6f25e7ca825b52b74df28173ca874347a57e"
     ],
     "trace": [
       {
         "method": "GET",
-        "url": "http://127.0.0.1:46675/capabilities?capability_class=urn%3Acapability%3Amachine-verifiable-standing%3A1",
+        "url": "http://127.0.0.1:46071/capabilities?capability_class=urn%3Acapability%3Amachine-verifiable-standing%3A1",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/.well-known/standing-capability.json",
+        "url": "http://127.0.0.1:33943/.well-known/standing-capability.json",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/v1/immutable/ab76d9b6684ed2c2f26c21888d936d3f814dbe4f2357a9bf97fe538f513a200a",
+        "url": "http://127.0.0.1:33943/v1/immutable/ab76d9b6684ed2c2f26c21888d936d3f814dbe4f2357a9bf97fe538f513a200a",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/verification/dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6.py",
+        "url": "http://127.0.0.1:33943/verification/dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6.py",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/v1/contract",
+        "url": "http://127.0.0.1:33943/v1/contract",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/schemas/submission.schema.json",
+        "url": "http://127.0.0.1:33943/schemas/submission.schema.json",
         "status": 200
       },
       {
         "method": "POST",
-        "url": "http://127.0.0.1:34539/v1/evaluations",
+        "url": "http://127.0.0.1:33943/v1/evaluations",
         "status": 402
       },
       {
         "method": "POST",
-        "url": "http://127.0.0.1:34539/v1/evaluations",
+        "url": "http://127.0.0.1:33943/v1/evaluations",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/v1/registry/a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
+        "url": "http://127.0.0.1:33943/v1/registry/409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/v1/purchases/a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78/result",
+        "url": "http://127.0.0.1:33943/v1/purchases/409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553/result",
         "status": 200
       }
     ],
     "milestones": {
       "quoted": {
         "trace_index": 6,
-        "purchase_id": "a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78"
+        "purchase_id": "409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553"
       },
       "verified_result": {
         "trace_index": 7,
-        "purchase_id": "a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
-        "mark_sha256": "4f675ffc14e8743a5e06cbc9af219b6fd2881e34d8038f479ca2efdd393cd9ae"
+        "purchase_id": "409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
+        "mark_sha256": "bb7bafae3b47741a809c99dd2c9df992ea0f662aa4ac4b1e17bdbdb4f0c66bc9"
       }
     },
     "production_completion": false,
@@ -121,51 +121,51 @@
       "cryptographic_integrity": "VERIFIED",
       "evaluation_replay": "VERIFIED",
       "environment": "TEST",
-      "purchase_id": "a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
-      "mark_id": "WHP-SM-a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
+      "purchase_id": "409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
+      "mark_id": "WHP-SM-409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
       "assessment": "ESTABLISHED",
       "current_standing": "ACTIVE",
       "namespace_evidence": "Issuer-signed HTTPS observations replayed; not independent proof of historical GitHub state.",
       "payment_chain_finality": "SIMULATED_NOT_LIVE",
-      "expires_at": 1789569612,
+      "expires_at": 1789716297,
       "historical_issuance": "VERIFIED",
       "institutional_root_admission": "CALLER_SUPPLIED_PIN_REQUIRED",
       "current_discovery": {
         "verified": true,
         "resolution_id": "urn:whp:standing:resolution:1",
         "capability_id": "urn:whp:standing:capability:1",
-        "service_origin": "http://127.0.0.1:34539",
-        "observed_at": 1789568414,
-        "valid_until": 1789568714
+        "service_origin": "http://127.0.0.1:33943",
+        "observed_at": 1789715098,
+        "valid_until": 1789715398
       },
       "technical_live_issuance_verified": false,
       "outside_buyer_relationship": "NOT_ESTABLISHED_BY_THIS_VERIFIER",
       "live_completion_verified": false
     },
     "encountered_admission": {
-      "mark_sha256": "4f675ffc14e8743a5e06cbc9af219b6fd2881e34d8038f479ca2efdd393cd9ae",
+      "mark_sha256": "bb7bafae3b47741a809c99dd2c9df992ea0f662aa4ac4b1e17bdbdb4f0c66bc9",
       "task_sha256": "b2c809bbe853145bf621436a68cc69b3cefe501acfe4c8a8f7857c4bb313291c",
       "verification": {
         "verified": true,
         "cryptographic_integrity": "VERIFIED",
         "evaluation_replay": "VERIFIED",
         "environment": "TEST",
-        "purchase_id": "a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
-        "mark_id": "WHP-SM-a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
+        "purchase_id": "409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
+        "mark_id": "WHP-SM-409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
         "assessment": "ESTABLISHED",
         "current_standing": "ACTIVE",
         "namespace_evidence": "Issuer-signed HTTPS observations replayed; not independent proof of historical GitHub state.",
         "payment_chain_finality": "SIMULATED_NOT_LIVE",
-        "expires_at": 1789569612,
+        "expires_at": 1789716297,
         "historical_issuance": "VERIFIED",
         "institutional_root_admission": "CALLER_SUPPLIED_PIN_REQUIRED",
         "current_discovery": {
           "verified": true,
           "resolution_id": "urn:whp:standing:resolution:1",
           "capability_id": "urn:whp:standing:capability:1",
-          "service_origin": "http://127.0.0.1:34539",
-          "observed_at": 1789568414,
-          "valid_until": 1789568714
+          "service_origin": "http://127.0.0.1:33943",
+          "observed_at": 1789715098,
+          "valid_until": 1789715398
         },
         "technical_live_issuance_verified": false,
         "outside_buyer_relationship": "NOT_ESTABLISHED_BY_THIS_VERIFIER",
@@ -177,89 +177,89 @@
       "cryptographic_integrity": "VERIFIED",
       "evaluation_replay": "VERIFIED",
       "environment": "TEST",
-      "purchase_id": "b7f2bf68a058f6f77d02baa934e52528d826dbd28e806eb5b10b8d25ee4afedb",
-      "mark_id": "WHP-SM-b7f2bf68a058f6f77d02baa934e52528d826dbd28e806eb5b10b8d25ee4afedb",
+      "purchase_id": "086af4bb411664154286db3f00d5423ee55062ec41ffedb77b786b6c1969878e",
+      "mark_id": "WHP-SM-086af4bb411664154286db3f00d5423ee55062ec41ffedb77b786b6c1969878e",
       "assessment": "ESTABLISHED",
       "current_standing": "ACTIVE",
       "namespace_evidence": "Issuer-signed HTTPS observations replayed; not independent proof of historical GitHub state.",
       "payment_chain_finality": "SIMULATED_NOT_LIVE",
-      "expires_at": 1789569612,
+      "expires_at": 1789716297,
       "historical_issuance": "VERIFIED",
       "institutional_root_admission": "CALLER_SUPPLIED_PIN_REQUIRED",
       "current_discovery": {
         "verified": true,
         "resolution_id": "urn:whp:standing:resolution:1",
         "capability_id": "urn:whp:standing:capability:1",
-        "service_origin": "http://127.0.0.1:34539",
-        "observed_at": 1789568414,
-        "valid_until": 1789568714
+        "service_origin": "http://127.0.0.1:33943",
+        "observed_at": 1789715098,
+        "valid_until": 1789715398
       },
       "technical_live_issuance_verified": false,
       "outside_buyer_relationship": "NOT_ESTABLISHED_BY_THIS_VERIFIER",
       "live_completion_verified": false
     },
-    "purchase_id": "b7f2bf68a058f6f77d02baa934e52528d826dbd28e806eb5b10b8d25ee4afedb",
+    "purchase_id": "086af4bb411664154286db3f00d5423ee55062ec41ffedb77b786b6c1969878e",
     "object_id": "b-copy",
     "source_keys": [
-      "965552c72fd3cec1911961b5ae5e2a0e66113866a18e11dbbfe99a7cd1e8262e",
-      "965552c72fd3cec1911961b5ae5e2a0e66113866a18e11dbbfe99a7cd1e8262e"
+      "a28dd9c2d3a297a284496c3c8adc4fb9324f4980543dfbcda2c9dcf96b43a3a1",
+      "a28dd9c2d3a297a284496c3c8adc4fb9324f4980543dfbcda2c9dcf96b43a3a1"
     ],
     "trace": [
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/.well-known/standing-capability.json",
+        "url": "http://127.0.0.1:33943/.well-known/standing-capability.json",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/verification/dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6.py",
+        "url": "http://127.0.0.1:33943/verification/dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6.py",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/v1/contract",
+        "url": "http://127.0.0.1:33943/v1/contract",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/v1/registry/a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
+        "url": "http://127.0.0.1:33943/v1/registry/409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/schemas/submission.schema.json",
+        "url": "http://127.0.0.1:33943/schemas/submission.schema.json",
         "status": 200
       },
       {
         "method": "POST",
-        "url": "http://127.0.0.1:34539/v1/evaluations",
+        "url": "http://127.0.0.1:33943/v1/evaluations",
         "status": 402
       },
       {
         "method": "POST",
-        "url": "http://127.0.0.1:34539/v1/evaluations",
+        "url": "http://127.0.0.1:33943/v1/evaluations",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/v1/registry/b7f2bf68a058f6f77d02baa934e52528d826dbd28e806eb5b10b8d25ee4afedb",
+        "url": "http://127.0.0.1:33943/v1/registry/086af4bb411664154286db3f00d5423ee55062ec41ffedb77b786b6c1969878e",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/v1/purchases/b7f2bf68a058f6f77d02baa934e52528d826dbd28e806eb5b10b8d25ee4afedb/result",
+        "url": "http://127.0.0.1:33943/v1/purchases/086af4bb411664154286db3f00d5423ee55062ec41ffedb77b786b6c1969878e/result",
         "status": 200
       }
     ],
     "milestones": {
       "quoted": {
         "trace_index": 5,
-        "purchase_id": "b7f2bf68a058f6f77d02baa934e52528d826dbd28e806eb5b10b8d25ee4afedb"
+        "purchase_id": "086af4bb411664154286db3f00d5423ee55062ec41ffedb77b786b6c1969878e"
       },
       "verified_result": {
         "trace_index": 6,
-        "purchase_id": "b7f2bf68a058f6f77d02baa934e52528d826dbd28e806eb5b10b8d25ee4afedb",
-        "mark_sha256": "c5a0c5628219009d3eaa9c472ac25c23bfc79fc861e754e97082ac7ecad038a8"
+        "purchase_id": "086af4bb411664154286db3f00d5423ee55062ec41ffedb77b786b6c1969878e",
+        "mark_sha256": "0af2b40bae952ffd0253510bf5323bc7827dc9afca4a1c97e20206e1b6e6a597"
       }
     },
     "production_completion": false,
@@ -280,32 +280,32 @@
     "trace": [
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/.well-known/standing-capability.json",
+        "url": "http://127.0.0.1:33943/.well-known/standing-capability.json",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/verification/dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6.py",
+        "url": "http://127.0.0.1:33943/verification/dbca29eb4894d1ede33b4e909205f1a4430926444327babb724016bbc96a84e6.py",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/v1/contract",
+        "url": "http://127.0.0.1:33943/v1/contract",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/v1/registry/a1109647f4f34c63ad90bf80771028eed36755f0c0a9824adbc7e0f665f35b78",
+        "url": "http://127.0.0.1:33943/v1/registry/409e04ea545e7f7002d711745efe313513d5f593ed9082e574438d2ea9ae1553",
         "status": 200
       },
       {
         "method": "GET",
-        "url": "http://127.0.0.1:34539/schemas/submission.schema.json",
+        "url": "http://127.0.0.1:33943/schemas/submission.schema.json",
         "status": 200
       },
       {
         "method": "POST",
-        "url": "http://127.0.0.1:34539/v1/evaluations",
+        "url": "http://127.0.0.1:33943/v1/evaluations",
         "status": 402
       }
     ]
