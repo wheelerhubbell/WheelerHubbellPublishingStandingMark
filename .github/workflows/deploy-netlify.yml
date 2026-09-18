@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 20
     env:
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      NETLIFY_SITE_ID: '0347a387-82b7-4b7f-b528-1024ad79b9e7'
+      NETLIFY_SITE_ID: '97a9ed85-361a-4e75-ab18-c0eaef334155'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
