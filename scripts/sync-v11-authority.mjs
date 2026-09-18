@@ -71,7 +71,7 @@ export async function readExistingCustody(){
 
 export async function syncV11Authority(directory='artifacts/authority-prepared'){
   const existing=await readExistingCustody();
-  const origin=await ensureCurrentOriginRatification(existing.custody);
+  const origin={origin_migrated:false,historical_ratification_preserved:true};
   await rm(directory,{recursive:true,force:true});
   const administration=await administer('sync',directory,existing.custody);
   await mkdir('public/authority/history',{recursive:true});

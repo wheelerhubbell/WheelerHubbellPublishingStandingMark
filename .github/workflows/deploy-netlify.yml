@@ -1,4 +1,4 @@
-name: Deploy current main to Netlify
+name: Synchronize existing WHP authority and deploy
 
 on:
   push:
@@ -6,23 +6,70 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: whp-netlify-production
+  group: whp-current-production-authority
   cancel-in-progress: false
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      NETLIFY_SITE_ID: '97a9ed85-361a-4e75-ab18-c0eaef334155'
+      NETLIFY_SITE_ID: '0347a387-82b7-4b7f-b528-1024ad79b9e7'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Deploy committed main tree to existing Netlify production site
-        run: npx -y netlify-cli@27.7.0 deploy --prod --build --context production --site "$NETLIFY_SITE_ID"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+      - run: python3 -m pip install -r requirements-verification.txt
+      - name: Verify full TEST acquisition gate before authority mutation
+        run: npm run check:open-acquisition
+      - name: Renew only the existing v1.1 authority and normalize the current runtime
+        run: |
+          mkdir -p artifacts
+          node scripts/refresh-live-status.mjs | tee artifacts/authority-sync.json
+      - name: Commit the exact renewed public authority
+        id: publication
+        run: |
+          git add -- public/authority evidence/open-acquisition/recursive-chain.json
+          if ! git diff --cached --quiet; then
+            git config user.name 'WHP authority administration'
+            git config user.email 'wheelerhubbell@users.noreply.github.com'
+            git commit -m 'Renew existing WHP v1.1 authority for current production runtime'
+            git push origin HEAD:main
+          fi
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Deploy the exact committed tree to the existing production site
+        env:
+          EXPECTED_DEPLOY_COMMIT: ${{ steps.publication.outputs.commit }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_DEPLOY_COMMIT"
+          git diff --quiet
+          git diff --cached --quiet
+          npx -y netlify-cli@27.7.0 deploy --prod --build --context production --site "$NETLIFY_SITE_ID" --json | tee artifacts/netlify-deploy.json
+      - name: Observe the exact deployment and matching v1.1 runtime
+        env:
+          EXPECTED_DEPLOY_COMMIT: ${{ steps.publication.outputs.commit }}
+          NETLIFY_DEPLOY_RESULT: artifacts/netlify-deploy.json
+        run: node scripts/observe-authority-deployment.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: whp-production-sync
+          path: |
+            artifacts/authority-sync.json
+            artifacts/authority-prepared/
+            artifacts/netlify-deploy.json
+            artifacts/authority-deployment.json
+            evidence/open-acquisition/recursive-chain.json
+          if-no-files-found: ignore

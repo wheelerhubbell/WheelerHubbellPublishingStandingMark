@@ -34,7 +34,7 @@ async function approved(){
   const publication=await read(RATIFICATION),b=publication.trust_bundle;
   demand(publication.root_pin===ROOT_PIN&&keyId(publication.root_public_key)===ROOT_PIN&&publication.issuer_key_id===ISSUER_ID,'EXISTING_IDENTITY_REQUIRED');
   const act=openSeal(publication.authorization_act,'WHP-EXISTING-ROOT-RATIFICATION-v1.1',publication.root_public_key);
-  demand(act.root_pin===ROOT_PIN&&act.issuer_key_id===ISSUER_ID&&act.canonical_origin===ORIGIN&&publication.canonical_origin===ORIGIN,'RATIFICATION_IDENTITY_MISMATCH');
+  demand(act.root_pin===ROOT_PIN&&act.issuer_key_id===ISSUER_ID&&act.canonical_origin===HISTORICAL_ORIGIN&&publication.canonical_origin===HISTORICAL_ORIGIN,'RATIFICATION_IDENTITY_MISMATCH');
   demand(act.existing_root_preserved===true&&act.existing_issuer_preserved===true&&act.source_or_transition_authority_granted===false,'EXISTING_AUTHORITY_ONLY');
   demand(act.profile.sha256===PROFILE_HASH&&act.contract_sha256===CONTRACT_HASH&&act.verifier_sha256===VERIFIER_HASH,'RATIFIED_RULES_MISMATCH');
   demand(hash(b)===act.trust_bundle_sha256&&b.root_public_key===publication.root_public_key,'RATIFIED_BUNDLE_MISMATCH');
