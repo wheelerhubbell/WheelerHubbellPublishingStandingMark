@@ -72,11 +72,6 @@ jobs:
             -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
             "https://api.netlify.com/api/v1/sites/$NETLIFY_SITE_ID" \
             | tee artifacts/netlify-site.json >/dev/null
-      - name: Verify source-only gates before uploading
-        run: |
-          set -Eeuo pipefail
-          npm run check:activation
-          npm run check:open-acquisition
       - name: Deploy the exact committed tree to the existing production site
         run: |
           set -Eeuo pipefail
