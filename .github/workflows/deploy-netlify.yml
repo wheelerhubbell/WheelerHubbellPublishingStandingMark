@@ -1,4 +1,4 @@
-name: Synchronize existing WHP authority and deploy
+name: Deploy committed WHP authority to Netlify
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: whp-current-production-authority
@@ -17,13 +17,16 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
     env:
       NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
       NETLIFY_SITE_ID: '0347a387-82b7-4b7f-b528-1024ad79b9e7'
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -32,23 +35,28 @@ jobs:
           python-version: '3.12'
       - run: npm ci --ignore-scripts
       - run: python3 -m pip install -r requirements-verification.txt
-      - name: Verify full TEST acquisition gate before authority mutation
-        run: npm run check:open-acquisition
-      - name: Renew only the existing v1.1 authority and normalize the current runtime
+      - name: Verify the committed authority and full TEST acquisition gate
         run: |
           mkdir -p artifacts
-          node scripts/refresh-live-status.mjs | tee artifacts/authority-sync.json
-      - name: Commit the exact renewed public authority
+          npm run check:activation | tee artifacts/authority-check.json
+          npm run check:open-acquisition
+          cp evidence/open-acquisition/recursive-chain.json artifacts/recursive-chain.json
+          git restore -- evidence/open-acquisition/recursive-chain.json
+      - name: Bind deployment to the exact committed source
         id: publication
         run: |
-          git add -- public/authority evidence/open-acquisition/recursive-chain.json
-          if ! git diff --cached --quiet; then
-            git config user.name 'WHP authority administration'
-            git config user.email 'wheelerhubbell@users.noreply.github.com'
-            git commit -m 'Renew existing WHP v1.1 authority for current production runtime'
-            git push origin HEAD:main
-          fi
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --quiet
+          git diff --cached --quiet
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          node --input-type=module <<'JS'
+          import {writeFile} from 'node:fs/promises';
+          import {execFileSync} from 'node:child_process';
+          import {PROFILE_HASH} from './src/profile.mjs';
+          import {CONTRACT_HASH,VERIFIER_HASH} from './src/protocol.mjs';
+          const git=(...args)=>execFileSync('git',args,{encoding:'utf8'}).trim();
+          await writeFile('public/deployment.json',JSON.stringify({source_commit:git('rev-parse','HEAD'),source_tree:git('rev-parse','HEAD^{tree}'),site_id:process.env.NETLIFY_SITE_ID,profile_sha256:PROFILE_HASH,contract_sha256:CONTRACT_HASH,verifier_sha256:VERIFIER_HASH})+'\n');
+          JS
       - name: Deploy the exact committed tree to the existing production site
         env:
           EXPECTED_DEPLOY_COMMIT: ${{ steps.publication.outputs.commit }}
@@ -57,18 +65,65 @@ jobs:
           git diff --quiet
           git diff --cached --quiet
           npx -y netlify-cli@27.7.0 deploy --prod --build --context production --site "$NETLIFY_SITE_ID" --json | tee artifacts/netlify-deploy.json
-      - name: Observe the exact deployment and matching v1.1 runtime
+      - name: Observe the exact deployment and committed C397 authority
         env:
           EXPECTED_DEPLOY_COMMIT: ${{ steps.publication.outputs.commit }}
           NETLIFY_DEPLOY_RESULT: artifacts/netlify-deploy.json
-        run: node scripts/observe-authority-deployment.mjs
+        run: |
+          node --input-type=module <<'JS'
+          import {readFile,writeFile} from 'node:fs/promises';
+          import {demand,parseStrict,hash,hashBytes,keyId,openSeal} from './src/canonical.mjs';
+          import {validateTrust,issuerAuthority} from './src/authority.mjs';
+          import {PROFILE_HASH} from './src/profile.mjs';
+          import {CONTRACT_HASH,VERIFIER_HASH} from './src/protocol.mjs';
+          import {target,api,ORIGIN,SITE_ID} from './scripts/netlify-production-target.mjs';
+          const read=async p=>parseStrict(await readFile(p,'utf8'),2000000);
+          const commit=process.env.EXPECTED_DEPLOY_COMMIT;
+          demand(/^[0-9a-f]{40}$/.test(commit??''),'DEPLOYMENT_COMMIT_REQUIRED');
+          const expected=await read('public/authority/root.json');
+          demand(expected.root_pin==='c397042181ef74b75c7b17615672780fcfb14a629853815cfa8b4f71e15fcf0e','COMMITTED_C397_AUTHORITY_REQUIRED');
+          demand(keyId(expected.root_public_key)===expected.root_pin,'COMMITTED_ROOT_MISMATCH');
+          const act=openSeal(expected.authorization_act,'WHP-FIRST-PUBLIC-RATIFICATION-v1',expected.root_public_key);
+          demand(act.root_pin===expected.root_pin&&act.issuer_key_id===expected.issuer_key_id&&act.canonical_origin===ORIGIN&&expected.canonical_origin===ORIGIN,'COMMITTED_AUTHORIZATION_MISMATCH');
+          const authority=validateTrust(expected.trust_bundle,expected.root_pin,Math.floor(Date.now()/1000));
+          issuerAuthority(expected.issuer_key_id,'https://github.com/independent-controller/records','namespace-control',authority);
+          demand(hash(await read('public/authority/trust-bundle.json'))===hash(expected.trust_bundle),'COMMITTED_AUTHORITY_FILES_DISAGREE');
+          const result=await read(process.env.NETLIFY_DEPLOY_RESULT);
+          demand(result.site_id===SITE_ID&&typeof result.deploy_id==='string','DEPLOYMENT_RESULT_TARGET_MISMATCH');
+          await target();
+          let deployment;
+          for(let attempt=0;attempt<36;attempt++){
+            const site=await api('/sites/'+SITE_ID),candidate=site.published_deploy;
+            if(candidate?.state==='ready'&&candidate.id===result.deploy_id){deployment=candidate;break;}
+            await new Promise(resolve=>setTimeout(resolve,10000));
+          }
+          demand(deployment,'CONNECTED_DEPLOYMENT_NOT_OBSERVED');
+          if(deployment.commit_ref)demand(deployment.commit_ref===commit,'DEPLOYED_COMMIT_MISMATCH');
+          async function get(path){const r=await fetch(ORIGIN+path,{headers:{'cache-control':'no-cache'},redirect:'error',signal:AbortSignal.timeout(20000)});demand(r.status===200,'DEPLOYED_RESOURCE_HTTP_'+r.status);return r.text();}
+          const localStamp=await read('public/deployment.json'),stamp=parseStrict(await get('/deployment.json'),1048576);
+          demand(localStamp.source_commit===commit&&hash(stamp)===hash(localStamp),'DEPLOYED_SOURCE_STAMP_MISMATCH');
+          demand(stamp.site_id===SITE_ID&&stamp.profile_sha256===PROFILE_HASH&&stamp.contract_sha256===CONTRACT_HASH&&stamp.verifier_sha256===VERIFIER_HASH,'DEPLOYED_SOURCE_COMMITMENTS_MISMATCH');
+          const [liveRaw,publicRaw,bundleRaw,contractRaw,verifierRaw,healthRaw]=await Promise.all([get('/.well-known/whp-standing.json'),get('/authority/root.json'),get('/authority/trust-bundle.json'),get('/v1/contract'),get('/verification/'+VERIFIER_HASH+'.py'),get('/healthz')]);
+          const live=parseStrict(liveRaw,2000000),published=parseStrict(publicRaw,2000000),bundle=parseStrict(bundleRaw,1048576),contract=parseStrict(contractRaw,1048576),health=parseStrict(healthRaw);
+          demand(hash(published)===hash(expected)&&hash(bundle)===hash(expected.trust_bundle),'DEPLOYED_PUBLIC_AUTHORITY_MISMATCH');
+          demand(live.root_pin===expected.root_pin&&hash(live.trust_bundle)===hash(expected.trust_bundle),'DEPLOYED_RUNTIME_TRUST_MISMATCH');
+          const trust=validateTrust(live.trust_bundle,expected.root_pin,Math.floor(Date.now()/1000));
+          demand(trust.profile.environment==='LIVE'&&live.environment==='LIVE'&&hash(live.profile)===PROFILE_HASH,'DEPLOYED_PROFILE_MISMATCH');
+          demand(contract.version==='WHP-STANDING-CONTRACT-v1.1'&&contract.profile.sha256===PROFILE_HASH&&contract.root_pin===expected.root_pin&&contract.authentication.purchase==='NONE_BEYOND_X402_PAYMENT'&&contract.payment.required_extension===null,'DEPLOYED_OPEN_CONTRACT_MISMATCH');
+          demand(contract.public_contract.sha256===CONTRACT_HASH&&hash(contract.public_contract.document)===CONTRACT_HASH&&contract.public_contract.verifier_sha256===VERIFIER_HASH,'DEPLOYED_CONTRACT_COMMITMENT_MISMATCH');
+          demand(hashBytes(verifierRaw)===VERIFIER_HASH,'DEPLOYED_VERIFIER_MISMATCH');
+          demand(health.service==='WHP Standing'&&health.live_completion_proven===false,'RUNTIME_HEALTH_CLAIM_MISMATCH');
+          const observation={checked_at:new Date().toISOString(),deployed_commit:commit,source_tree:stamp.source_tree,deployment_commit_attribution:deployment.commit_ref?'NETLIFY_GIT_COMMIT':'WORKFLOW_DEPLOY_ID_AND_EXACT_PUBLIC_STAMP',deployment_id:deployment.id,site_id:SITE_ID,origin:ORIGIN,root_pin:live.root_pin,profile_sha256:PROFILE_HASH,contract_sha256:CONTRACT_HASH,verifier_sha256:VERIFIER_HASH,runtime_trust_bundle_sha256:hash(live.trust_bundle),runtime_status_sequence:live.trust_bundle.status_snapshot.payload.sequence,status_valid_until:live.trust_bundle.status_snapshot.payload.valid_until,public_status_matches_runtime:true,production_function_refreshed:true,health_status:200,payment_executed:false,live_mark_issued:false,production_completion:false};
+          await writeFile('artifacts/authority-deployment.json',JSON.stringify(observation,null,2)+'\n');
+          console.log(JSON.stringify(observation));
+          JS
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: whp-production-sync
           path: |
-            artifacts/authority-sync.json
-            artifacts/authority-prepared/
+            artifacts/authority-check.json
+            artifacts/recursive-chain.json
             artifacts/netlify-deploy.json
             artifacts/authority-deployment.json
             evidence/open-acquisition/recursive-chain.json
