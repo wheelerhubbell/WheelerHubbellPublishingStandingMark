@@ -37,6 +37,7 @@ jobs:
       - run: python3 -m pip install -r requirements-verification.txt
       - name: Verify the committed authority and full TEST acquisition gate
         run: |
+          set -Eeuo pipefail
           test -n "$NETLIFY_AUTH_TOKEN" || { echo 'NETLIFY_AUTH_TOKEN is not configured'; exit 1; }
           mkdir -p artifacts
           npm run check:activation | tee artifacts/authority-check.json
@@ -45,6 +46,7 @@ jobs:
           git restore -- evidence/open-acquisition/recursive-chain.json
       - name: Bind deployment to the exact committed source
         run: |
+          set -Eeuo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git diff --quiet
           git diff --cached --quiet
@@ -65,25 +67,28 @@ jobs:
           JS
       - name: Verify Netlify site access before uploading
         run: |
+          set -Eeuo pipefail
           curl --fail-with-body --silent --show-error \
             -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
             "https://api.netlify.com/api/v1/sites/$NETLIFY_SITE_ID" \
             | tee artifacts/netlify-site.json >/dev/null
-      - name: Run the Netlify build locally
+      - name: Verify source-only gates before uploading
         run: |
+          set -Eeuo pipefail
           npm run check:activation
-          node scripts/check-deployment.mjs
           npm run check:open-acquisition
       - name: Deploy the exact committed tree to the existing production site
         run: |
+          set -Eeuo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git diff --quiet
           git diff --cached --quiet
-          npx -y netlify-cli@27.7.0 deploy --prod --dir=public --site "$NETLIFY_SITE_ID" --json | tee artifacts/netlify-deploy.json
+          npx -y netlify-cli@27.7.0 deploy --prod --dir=public --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN" --json | tee artifacts/netlify-deploy.json
       - name: Verify the deployed source stamp
         env:
           EXPECTED_DEPLOY_COMMIT: ${{ github.sha }}
         run: |
+          set -Eeuo pipefail
           node --input-type=module <<'JS'
           import {readFile} from 'node:fs/promises';
           const expected = JSON.parse(await readFile('public/deployment.json', 'utf8'));
